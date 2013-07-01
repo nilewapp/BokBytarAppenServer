@@ -1,0 +1,27 @@
+#!/bin/zsh
+# Generates the trust stores for the server (keystore.jks) and the app (public_truststore.bks)
+
+KEYSTORE=keystore.jks
+CERT=public.cert
+PUBLICTRUST=public_truststore.bks
+
+PASSWORD=leenocknaniwa
+
+# Generate public/private keys and certificate
+if [ -e $KEYSTORE ]; then
+    rm $KEYSTORE
+fi
+keytool -genkey -keyalg RSA -alias selfsigned -keystore $KEYSTORE -storepass $PASSWORD -validity 365 -keysize 2048
+
+# Export cert
+if [ -e $CERT ]; then
+    rm $CERT
+fi
+keytool -export -alias selfsigned -keystore keystore.jks -storepass $PASSWORD -rfc -file $CERT
+
+# Generate public key and cert
+if [ -e $PUBLICTRUST ]; then
+    rm $PUBLICTRUST
+fi
+keytool -import -alias selfsigned -file public.cert -storetype BKS -providerclass org.bouncycastle.jce.provider.BouncyCastleProvider -providerpath ~/Downloads/bcprov-jdk16-146.jar -rfc -file $CERT -keystore $PUBLICTRUST -storepass $PASSWORD
+

@@ -1,0 +1,19 @@
+{
+    "universities" : [ 
+        {
+            "name" : "kth"
+        }, {
+            "name" : "lund"
+        }, {
+            "name" : "chalmers"
+        }, {
+            "name" : "goteborg"
+        }, {
+            "name" : "karalinska"
+        }, {
+            "name" : "mittuniversitetet"
+        }, {
+            "name" : "lulea"
+        }
+    ]
+}
