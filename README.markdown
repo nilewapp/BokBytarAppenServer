@@ -8,14 +8,18 @@ Follow these steps to get started:
 
         $ git clone git://github.com/nilewapp/BokBytarAppenServer
 
-2. Launch SBT:
+2. cd into the project directory
+
+        $ cd BokBytarAppenServer
+
+3. Launch SBT:
 
         $ sbt
 
-3. Start the application:
+4. Start the application:
 
         > re-start
 
-4. Stop the application:
+5. Stop the application:
 
         > re-stop
