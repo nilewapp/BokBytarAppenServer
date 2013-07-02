@@ -43,11 +43,11 @@ keytool -genkey -keyalg RSA -alias selfsigned -keystore $KEYSTORE -storepass $PA
 if [ -e $CERT ]; then
     rm $CERT
 fi
-keytool -export -alias selfsigned -keystore keystore.jks -storepass $PASSWORD -rfc -file $CERT
+keytool -export -alias selfsigned -keystore $KEYSTORE -storepass $PASSWORD -rfc -file $CERT
 
 # Generate public key and cert
 if [ -e $PUBLICTRUST ]; then
     rm $PUBLICTRUST
 fi
-keytool -import -alias selfsigned -file public.cert -storetype BKS -providerclass org.bouncycastle.jce.provider.BouncyCastleProvider -providerpath "$2" -rfc -file $CERT -keystore $PUBLICTRUST -storepass $PASSWORD
+keytool -import -alias selfsigned -file $CERT -storetype BKS -providerclass org.bouncycastle.jce.provider.BouncyCastleProvider -providerpath "$2" -rfc -file $CERT -keystore $PUBLICTRUST -storepass $PASSWORD
 
