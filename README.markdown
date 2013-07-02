@@ -39,7 +39,7 @@ in any web browser.
 
         $ ./tools/gentruststores "your password" <path to bcprov jar>/bcprov-jdk16-146.jar
 
-5. Copy the generated file keystore.jks to \<server directory\>/src/main/resources/
+5. Copy the generated file `keystore.jks` to `<server directory>/src/main/resources/`
 
 6. Update Security.scala to contain your password
 
@@ -47,15 +47,15 @@ in any web browser.
         val password = "your password"
         ...
 
-7. Copy the generated file public\_truststore.bks to \<app directory\>/res/raw/
+7. Copy the generated file `public_truststore.bks` to `<app directory>/res/raw/`
 
-8. Update password in \<app directory\>/res/values/strings.xml
+8. Update password in `<app directory>/res/values/strings.xml`
 
         ...
         <string name="truststore_password">your password</string>
         ...
 
-9. Update the url to the server in \<app directory\>/res/values/strings.xml
+9. Update the url to the server in `<app directory>/res/values/strings.xml`
 
         ...
         <string name="server_url">https://yourdomain.com:8443/</string>
