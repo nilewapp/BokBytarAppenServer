@@ -9,4 +9,3 @@ test-output/
 *.jks
 *.bks
 *.cert
-Security.scala
