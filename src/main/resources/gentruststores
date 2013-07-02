@@ -5,7 +5,7 @@ KEYSTORE=keystore.jks
 CERT=public.cert
 PUBLICTRUST=public_truststore.bks
 
-PASSWORD=leenocknaniwa
+PASSWORD="$1"
 
 # Generate public/private keys and certificate
 if [ -e $KEYSTORE ]; then

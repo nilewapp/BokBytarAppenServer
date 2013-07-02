@@ -4,6 +4,8 @@ import java.security.{SecureRandom, KeyStore}
 import javax.net.ssl.{KeyManagerFactory, SSLContext, TrustManagerFactory}
 import spray.io._
 
+import Security._
+
 /**
  * Provides the SSL configuration for the server
  */
@@ -11,7 +13,6 @@ trait SslConfig {
 
   implicit def sslContext: SSLContext = {
     val keyStoreResource = "/keystore.jks"
-    val password = "leenocknaniwa"
 
     val keyStore = KeyStore.getInstance("jks")
     keyStore.load(getClass.getResourceAsStream(keyStoreResource), password.toCharArray)
