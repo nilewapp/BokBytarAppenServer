@@ -33,28 +33,46 @@ in any web browser.
 
 2. cd into the server project directory
 
-3. Generate trust stores and certificates
+3. Download the following jar in order to be able to generate the truststores: [bcprov-jdk16-146.jar](http://www.bouncycastle.org/fr/download/bcprov-jdk16-146.jar)
 
-        $ ./tools/gentruststores "your password"
+4. Generate trust stores and certificates
 
-4. Copy the generated file keystore.jks to \<server directory\>/src/main/resources/
+        $ ./tools/gentruststores "your password" <path to bcprov jar>/bcprov-jdk16-146.jar
 
-5. Update Security.scala to contain your password
+5. Copy the generated file keystore.jks to \<server directory\>/src/main/resources/
+
+6. Update Security.scala to contain your password
 
         ...
         val password = "your password"
         ...
 
-6. Copy the generated file public\_truststore.bks to \<app directory\>/res/raw/
+7. Copy the generated file public\_truststore.bks to \<app directory\>/res/raw/
 
-7. Update password in \<app directory\>/res/values/strings.xml
+8. Update password in \<app directory\>/res/values/strings.xml
 
         ...
         <string name="truststore_password">your password</string>
         ...
 
-8. Update the url to the server in \<app directory\>/res/values/strings.xml
+9. Update the url to the server in \<app directory\>/res/values/strings.xml
 
         ...
         <string name="server_url">https://yourdomain.com:8443/</string>
         ...
+
+### Copyright and license
+
+ Copyright 2013 Robert Welin
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.

@@ -1,9 +1,35 @@
 #!/bin/zsh
+#
+#  Copyright 2013 Robert Welin
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 # Generates the trust stores for the server (keystore.jks) and the app (public_truststore.bks)
 
 KEYSTORE=keystore.jks
 CERT=public.cert
 PUBLICTRUST=public_truststore.bks
+
+if [ $# -eq 0 ]; then
+    echo 'gentruststores - Generates the trust stores for the server (keystore.jks) and the app (public_truststore.bks)
+
+USAGE:
+    gentruststores <truststore password> <path to BouncyCastleProvider jar file>
+
+EXAMPLE:
+    gentruststores testpassword ~/Downloads/bcprov-jdk16-146.jar'
+    exit 0
+fi
 
 PASSWORD="$1"
 
@@ -23,5 +49,5 @@ keytool -export -alias selfsigned -keystore keystore.jks -storepass $PASSWORD -r
 if [ -e $PUBLICTRUST ]; then
     rm $PUBLICTRUST
 fi
-keytool -import -alias selfsigned -file public.cert -storetype BKS -providerclass org.bouncycastle.jce.provider.BouncyCastleProvider -providerpath ~/Downloads/bcprov-jdk16-146.jar -rfc -file $CERT -keystore $PUBLICTRUST -storepass $PASSWORD
+keytool -import -alias selfsigned -file public.cert -storetype BKS -providerclass org.bouncycastle.jce.provider.BouncyCastleProvider -providerpath "$2" -rfc -file $CERT -keystore $PUBLICTRUST -storepass $PASSWORD
 
