@@ -49,13 +49,13 @@ in any web browser.
 
 7. Copy the generated file `public_truststore.bks` to `<app directory>/res/raw/`
 
-8. Update password in `<app directory>/res/values/strings.xml`
+8. Add the password in `<app directory>/res/values/strings.xml` or the file of your choosing (e.g. `/res/values/secret.xml`)
 
         ...
         <string name="truststore_password">your password</string>
         ...
 
-9. Update the url to the server in `<app directory>/res/values/strings.xml`
+9. Update the url to the server in `<app directory>/res/values/server.xml`
 
         ...
         <string name="server_url">https://yourdomain.com:8443/</string>
