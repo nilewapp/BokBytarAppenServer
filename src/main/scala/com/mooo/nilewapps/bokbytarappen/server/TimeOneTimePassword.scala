@@ -1,4 +1,4 @@
-/*
+/**
  *  Copyright 2013 Robert Welin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -40,9 +40,13 @@ object TimeOneTimePassword {
 
     val hash = mac.doFinal(message.toString.getBytes)
 
+    /* Get last nibble of hash */
     val offset = 0xF & hash.last
 
+    /* Take four bytes of the hash */
     val truncatedHash = hash.slice(offset, offset + 4)
+
+    /* Clear the top bit */
     truncatedHash(0) = (0x7F & truncatedHash(0)).toByte
 
     val wrapper = ByteBuffer.wrap(truncatedHash)
