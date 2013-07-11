@@ -25,10 +25,10 @@ trait DB {
 
   val DBName = "db"
   lazy val url = "jdbc:h2:" + getClass.getResource("/").getPath() + DBName
-  def db = Database.forURL(url, driver = "org.h2.Driver")
+  lazy val db = Database.forURL(url, driver = "org.h2.Driver")
 
   /**
-   *  Tables
+   * Tables
    */
   object Countries extends Table[(Int, String)]("COUNTRIES") {
     def numericCode = column[Int]("NUMERIC_CODE", O.PrimaryKey)
@@ -52,6 +52,8 @@ trait DB {
 
   object Profile extends Table[(String, Option[String])]("PROFILE") {
     def id = column[String]("ID", O.PrimaryKey)
+    def passwordHash = column[String]("PASSWORD_HASH")
+    def salt = column[String]("SALT")
     def university = column[Option[String]]("UNIVERSITY", O.Nullable)
     def * = id ~ university
     def universityFK = foreignKey("UNIVERSITY_FK", university.get, Universities)(_.name)
@@ -73,14 +75,21 @@ trait DB {
     def profileFK = foreignKey("OWNED_PROFILE_FK", profileId, Profile)(_.id)
   }
 
-  def init = db withSession { 
-    (  Countries.ddl
-    ++ Cities.ddl 
-    ++ Universities.ddl
-    ++ Profile.ddl
-    ++ WantedBooks.ddl
-    ++ OwnedBooks.ddl
-    ).create
+  def all = Countries.ddl ++ 
+    Cities.ddl ++ 
+    Universities.ddl ++ 
+    Profile.ddl ++ 
+    WantedBooks.ddl ++ 
+    OwnedBooks.ddl 
+
+  def query[T](f: => T): T = db withSession f
+
+  def drop = query {
+    all.drop
+  }
+
+  def init = query { 
+    all.create
     
     Countries.insertAll(
       (752, "SE")

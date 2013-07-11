@@ -29,7 +29,7 @@ import scala.slick.driver.H2Driver.simple._
 import Database.threadLocalSession
 
 /**
- *  Actor that runs the service
+ * Actor that runs the service
  */
 class ServiceActor extends Actor with Service {
 
@@ -37,7 +37,7 @@ class ServiceActor extends Actor with Service {
 
   def receive = runRoute(routes ~
     /**
-     * Stopes the server. Can only be accessed from localhost.
+     * Stops the server. Can only be accessed from localhost.
      */
     path("stop") {
       host("localhost") {
@@ -58,7 +58,7 @@ class ServiceActor extends Actor with Service {
 //}
 
 /**
- *  Provides all functionality of the server
+ * Provides all functionality of the server
  */
 trait Service extends HttpService with DB {
 
@@ -79,15 +79,15 @@ trait Service extends HttpService with DB {
       }
     } ~
     /**
-     *  Returns json array of all universities in a given country.
+     * Returns json array of all universities in a given country.
      */
     path("universities" / IntNumber) { countryCode =>
       get {
         respondWithMediaType(`application/json`) {
           complete {
-            db withSession {
+            query {
              (for {
-                uni <- Universities
+                uni  <- Universities
                 city <- Cities
                 if city.name    === uni.city
                 if city.country === countryCode
@@ -98,7 +98,7 @@ trait Service extends HttpService with DB {
       }
     } ~
     /**
-     *  Registers the user
+     * Registers the user
      */
     path("register") {
       post {
