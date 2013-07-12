@@ -18,6 +18,7 @@ package com.mooo.nilewapps.bokbytarappen.server
 import scala.concurrent.duration._
 import akka.actor.Actor
 import spray.routing._
+import authentication._
 import spray.http._
 import spray.httpx.SprayJsonSupport
 import SprayJsonSupport._
@@ -60,7 +61,7 @@ class ServiceActor extends Actor with Service {
 /**
  * Provides all functionality of the server
  */
-trait Service extends HttpService with DB {
+trait Service extends HttpService with DB with Authenticator {
 
   //import CityJsonProtocol._ 
 
@@ -102,10 +103,10 @@ trait Service extends HttpService with DB {
      */
     path("register") {
       post {
-        formFields('id, 'hash) { (id, hash) =>
+        authenticate(new BasicHttpAuthenticator("Registration", authenticator)) { user =>
           respondWithMediaType(`text/plain`) {
             complete {
-              "Your id is '" + id + "' and the hashed id is '" + hash + "'"
+              user
             }
           }
         }

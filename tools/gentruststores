@@ -14,11 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Generates the trust stores for the server (keystore.jks) and the app (public_truststore.bks)
+# Generates the trust stores for the server (keystore.jks) and the client (public_truststore.bks)
 
 KEYSTORE=keystore.jks
 CERT=public.cert
-PUBLICTRUST=public_truststore.bks
+PUBLIC=public_keystore.bks
 
 if [ $# -eq 0 ]; then
     echo 'gentruststores - Generates the trust stores for the server (keystore.jks) and the app (public_truststore.bks)
@@ -46,8 +46,12 @@ fi
 keytool -export -alias selfsigned -keystore $KEYSTORE -storepass $PASSWORD -rfc -file $CERT
 
 # Generate public key and cert
-if [ -e $PUBLICTRUST ]; then
-    rm $PUBLICTRUST
+if [ -e $PUBLIC ]; then
+    rm $PUBLIC
 fi
-keytool -import -alias selfsigned -file $CERT -storetype BKS -providerclass org.bouncycastle.jce.provider.BouncyCastleProvider -providerpath "$2" -rfc -file $CERT -keystore $PUBLICTRUST -storepass $PASSWORD
+keytool -import -alias selfsigned -file $CERT -storetype BKS -providerclass org.bouncycastle.jce.provider.BouncyCastleProvider -providerpath "$2" -rfc -file $CERT -keystore $PUBLIC -storepass $PASSWORD
 
+# Clean up
+if [ -e $CERT ]; then
+    rm $CERT
+fi
