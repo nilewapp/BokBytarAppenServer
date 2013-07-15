@@ -29,6 +29,8 @@ import MediaTypes._
 import scala.slick.driver.H2Driver.simple._
 import Database.threadLocalSession
 
+import scala.language.postfixOps
+
 /**
  * Actor that runs the service
  */
@@ -103,14 +105,32 @@ trait Service extends HttpService with DB with Authenticator {
      */
     path("register") {
       post {
+        formFields('email, 'name, 'phone ?, 'university, 'password) { (email, name, phone, university, password) =>
+          respondWithMediaType(`text/plain`) {
+            complete {
+              query {
+                val salt = BCrypt.gensalt()
+                val passwordHash = BCrypt.hashpw(password, salt)
+                Profiles.insert(Profile(email, passwordHash, salt, name, phone, university))
+                "Successfully registered " + email
+              }
+            }
+          }
+        }
+      }
+    } ~
+    /**
+     * Unregister the user
+     */
+    path("unregister") {
+      post {
         authenticate(new BasicHttpAuthenticator("Registration", authenticator)) { user =>
           respondWithMediaType(`text/plain`) {
             complete {
-              user
+              user.id
             }
           }
         }
       }
     }
-    
 }

@@ -19,8 +19,25 @@ import scala.concurrent._
 import ExecutionContext.Implicits.global
 import spray.routing.authentication.UserPass
 
+import scala.slick.driver.H2Driver.simple._
+import Database.threadLocalSession
+
+import sun.misc.BASE64Decoder
+
 trait Authenticator extends DB {
-  def authenticator(credentials: Option[UserPass]): Future[Option[String]] = future {
-    Some("User: " + credentials.get.user + ", Password: " + credentials.get.pass)
+
+  def checkpw(password: String, hash: String) = BCrypt.checkpw(password, hash)
+
+  def authenticator(credentials: Option[UserPass]): Future[Option[Profile]] = future {
+    val de = new BASE64Decoder()
+    def decode(s: String) = new String(de.decodeBuffer(s))
+    val decoded = credentials.map(up => 
+      UserPass(decode(up.user), decode(up.pass))).get
+    val user = Query(Profiles).filter(_.id === decoded.user).take(1).list.head
+    if (checkpw(decoded.pass, user.passwordHash)) {
+      Some(user)
+    } else {
+      None
+    }
   }
 }

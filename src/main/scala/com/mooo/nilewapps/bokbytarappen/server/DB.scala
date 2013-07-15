@@ -27,6 +27,14 @@ trait DB {
   lazy val url = "jdbc:h2:" + getClass.getResource("/").getPath() + DBName
   lazy val db = Database.forURL(url, driver = "org.h2.Driver")
 
+  case class Profile(
+    id: String, 
+    passwordHash: String,
+    salt: String,
+    name: String,
+    phoneNumber: Option[String],
+    university: String)
+
   /**
    * Tables
    */
@@ -50,13 +58,15 @@ trait DB {
     def cityFK = foreignKey("CITY_FK", city, Cities)(_.name)
   }
 
-  object Profile extends Table[(String, Option[String])]("PROFILE") {
+  object Profiles extends Table[Profile]("PROFILES") {
     def id = column[String]("ID", O.PrimaryKey)
     def passwordHash = column[String]("PASSWORD_HASH")
     def salt = column[String]("SALT")
-    def university = column[Option[String]]("UNIVERSITY", O.Nullable)
-    def * = id ~ university
-    def universityFK = foreignKey("UNIVERSITY_FK", university.get, Universities)(_.name)
+    def name = column[String]("NAME")
+    def phoneNumber = column[Option[String]]("PHONE_NUMBER", O.Nullable)
+    def university = column[String]("UNIVERSITY")
+    def * = id ~ passwordHash ~ salt ~ name ~ phoneNumber ~ university <> (Profile, Profile.unapply _)
+    def universityFK = foreignKey("UNIVERSITY_FK", university, Universities)(_.name)
   }
 
   object WantedBooks extends Table[(String, Int)]("WANTED_BOOKS") {
@@ -64,7 +74,7 @@ trait DB {
     def isbn13 = column[Int]("ISBN")
     def * = profileId ~ isbn13
     def wantedBooksPK = primaryKey("WANTED_BOOKS_PK", profileId ~ isbn13)
-    def profileFK = foreignKey("WANTED_PROFILE_FK", profileId, Profile)(_.id)
+    def profileFK = foreignKey("WANTED_PROFILE_FK", profileId, Profiles)(_.id)
   }
 
   object OwnedBooks extends Table[(String, Int)]("OWNED_BOOKS") {
@@ -72,20 +82,36 @@ trait DB {
     def isbn13 = column[Int]("ISBN")
     def * = profileId ~ isbn13
     def ownedBooksPK = primaryKey("OWNED_BOOKS_PK", profileId ~ isbn13)
-    def profileFK = foreignKey("OWNED_PROFILE_FK", profileId, Profile)(_.id)
+    def profileFK = foreignKey("OWNED_PROFILE_FK", profileId, Profiles)(_.id)
+  }
+
+  object Session extends Table[(String, String, String)]("SESSION") {
+    def profile = column[String]("PROFILE")
+    def series = column[String]("SERIES")
+    def token = column[String]("TOKEN")
+    def * = profile ~ series ~ token
+    def sessionPK = primaryKey("SESSION_PK", profile ~ series ~ token)
+    def profileFK = foreignKey("SESSION_PROFILE_FK", profile, Profiles)(_.id)
   }
 
   def all = Countries.ddl ++ 
     Cities.ddl ++ 
     Universities.ddl ++ 
-    Profile.ddl ++ 
+    Profiles.ddl ++ 
     WantedBooks.ddl ++ 
-    OwnedBooks.ddl 
+    OwnedBooks.ddl ++
+    Session.ddl
 
   def query[T](f: => T): T = db withSession f
 
   def drop = query {
     all.drop
+  }
+
+  def insertProfile(id: String, passwordHash: String, salt: String, name: String, phoneNumber: Option[String], university: String) {
+    query {
+      Profiles.insert(Profile(id, passwordHash, salt, name, phoneNumber, university))
+    }
   }
 
   def init = query { 
