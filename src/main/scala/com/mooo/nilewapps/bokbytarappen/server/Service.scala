@@ -17,13 +17,14 @@ package com.mooo.nilewapps.bokbytarappen.server
 
 import scala.concurrent.duration._
 import akka.actor.Actor
-import spray.routing._
+import spray._
+import routing._
 import authentication._
-import spray.http._
-import spray.httpx.SprayJsonSupport
+import http._
+import httpx.SprayJsonSupport
 import SprayJsonSupport._
-import spray.httpx.marshalling._
-import spray.json.DefaultJsonProtocol._
+import httpx.marshalling._
+import json.DefaultJsonProtocol._
 import MediaTypes._
 
 import scala.slick.driver.H2Driver.simple._
@@ -55,17 +56,10 @@ class ServiceActor extends Actor with Service {
 
 }
 
-//case class City(name: String, code: Int)
-//object CityJsonProtocol extends DefaultJsonProtocol {
-//  implicit val CityFormat = jsonFormat2(City)
-//}
-
 /**
  * Provides all functionality of the server
  */
 trait Service extends HttpService with DB with Authenticator {
-
-  //import CityJsonProtocol._ 
 
   val routes =
     path("") {
@@ -124,7 +118,7 @@ trait Service extends HttpService with DB with Authenticator {
      */
     path("unregister") {
       post {
-        authenticate(new BasicHttpAuthenticator("Registration", authenticator)) { user =>
+        (authenticate(new BasicTokenAuthenticator("Unregistration", tokenAuthenticator))) { user =>
           respondWithMediaType(`text/plain`) {
             complete {
               user.id

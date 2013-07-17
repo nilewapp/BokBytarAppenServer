@@ -35,6 +35,12 @@ trait DB {
     phoneNumber: Option[String],
     university: String)
 
+  case class Session(
+    profile: String,
+    series: String,
+    token: String,
+    expirationTime: Long)
+
   /**
    * Tables
    */
@@ -85,11 +91,12 @@ trait DB {
     def profileFK = foreignKey("OWNED_PROFILE_FK", profileId, Profiles)(_.id)
   }
 
-  object Session extends Table[(String, String, String)]("SESSION") {
+  object Sessions extends Table[Session]("SESSION") {
     def profile = column[String]("PROFILE")
     def series = column[String]("SERIES")
     def token = column[String]("TOKEN")
-    def * = profile ~ series ~ token
+    def expirationTime = column[Long]("EXPIRATION_TIME")
+    def * = profile ~ series ~ token ~ expirationTime <> (Session, Session.unapply _)
     def sessionPK = primaryKey("SESSION_PK", profile ~ series ~ token)
     def profileFK = foreignKey("SESSION_PROFILE_FK", profile, Profiles)(_.id)
   }
@@ -100,7 +107,7 @@ trait DB {
     Profiles.ddl ++ 
     WantedBooks.ddl ++ 
     OwnedBooks.ddl ++
-    Session.ddl
+    Sessions.ddl
 
   def query[T](f: => T): T = db withSession f
 

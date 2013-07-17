@@ -24,20 +24,36 @@ import Database.threadLocalSession
 
 import sun.misc.BASE64Decoder
 
+import BasicTokenAuthenticator._
+
 trait Authenticator extends DB {
 
-  def checkpw(password: String, hash: String) = BCrypt.checkpw(password, hash)
+  def passwordAuthenticator(credentials: Option[UserPass]): Future[Option[Profile]] = future {
+    credentials match {
+      case Some(c) =>
+        query { Query(Profiles).filter(_.id === c.user).take(1).list.headOption } match {
+          case Some(user) =>
+            if (BCrypt.checkpw(c.pass, user.passwordHash)) Some(user)
+            else None
+          case _ => None
+        }
+      case _ => None
+    }
+  }
 
-  def authenticator(credentials: Option[UserPass]): Future[Option[Profile]] = future {
-    val de = new BASE64Decoder()
-    def decode(s: String) = new String(de.decodeBuffer(s))
-    val decoded = credentials.map(up => 
-      UserPass(decode(up.user), decode(up.pass))).get
-    val user = Query(Profiles).filter(_.id === decoded.user).take(1).list.head
-    if (checkpw(decoded.pass, user.passwordHash)) {
-      Some(user)
-    } else {
-      None
+  def tokenAuthenticator(credentials: Option[Token]): Future[Option[Profile]] = future {
+    credentials match {
+      case Some(t) => query { 
+        (for {
+          profile <- Profiles if profile.id === t.user
+          session <- Sessions 
+          if profile.id     === session.profile &&
+             session.series === t.series &&
+             session.token  === t.token  &&
+             session.expirationTime > System.currentTimeMillis()
+        } yield profile).take(1).list.headOption
+      }
+      case _ => None
     }
   }
 }
