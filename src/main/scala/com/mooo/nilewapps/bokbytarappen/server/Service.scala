@@ -24,11 +24,13 @@ import http._
 import httpx.SprayJsonSupport
 import SprayJsonSupport._
 import httpx.marshalling._
-import json.DefaultJsonProtocol._
+import json.DefaultJsonProtocol
 import MediaTypes._
 
 import scala.slick.driver.H2Driver.simple._
 import Database.threadLocalSession
+
+import SessionJsonProtocol._
 
 import scala.language.postfixOps
 
@@ -118,12 +120,38 @@ trait Service extends HttpService with DB with Authenticator {
      */
     path("unregister") {
       post {
-        (authenticate(new BasicTokenAuthenticator("Unregistration", tokenAuthenticator))) { user =>
-          respondWithMediaType(`text/plain`) {
-            complete {
-              user.id
+        (authenticate(new BasicTokenAuthenticator("Unregistration", tokenAuthenticator))) { case (user, session) =>
+          formField('name) { name =>
+            respondWithMediaType(`application/json`) {
+              complete {
+
+                case class Message(
+                  message1: String,
+                  message2: String)
+
+                implicit val MessageFormat = jsonFormat2(Message)
+                implicit val SessMessFormat = jsonFormat2(SessMess[Message])
+
+                SessMess(session, Message(name, "testmessage"))
+              }
             }
           }
+        }
+      }
+    } ~
+    /**
+     * Verifies a password and returns an authentication token.
+     */
+    path("login") {
+      post {
+        authenticate(new BasicHttpAuthenticator("Login", passwordAuthenticator)) { case (user, session) =>
+          respondWithMediaType(`application/json`) {
+            complete {
+              implicit val SessMessFormat = jsonFormat2(SessMess[String])
+              SessMess(session, "")
+            }
+          }
+
         }
       }
     }

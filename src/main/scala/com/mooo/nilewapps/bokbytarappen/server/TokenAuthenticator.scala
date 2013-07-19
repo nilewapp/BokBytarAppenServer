@@ -24,11 +24,11 @@ import httpx._
 import unmarshalling._
 
 object BasicTokenAuthenticator {
-  case class Token(user: String, series: String, token: String)
+  case class Token(profile: String, series: String, token: String)
   object Token {
     def apply(vals: Map[String, String]): Option[Token] = 
       try {
-        Some(Token(vals("email"), vals("series"), vals("token")))
+        Some(Token(vals("profile"), vals("series"), vals("token")))
       } catch {
         case _: NoSuchElementException => None
       }

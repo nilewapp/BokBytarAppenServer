@@ -1,4 +1,4 @@
-/*
+/**
  *  Copyright 2013 Robert Welin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,18 +22,19 @@ import spray.routing.authentication.UserPass
 import scala.slick.driver.H2Driver.simple._
 import Database.threadLocalSession
 
-import sun.misc.BASE64Decoder
-
 import BasicTokenAuthenticator._
 
 trait Authenticator extends DB {
 
-  def passwordAuthenticator(credentials: Option[UserPass]): Future[Option[Profile]] = future {
+  def passwordAuthenticator(credentials: Option[UserPass]): Future[Option[(Profile, Session)]] = future {
     credentials match {
       case Some(c) =>
         query { Query(Profiles).filter(_.id === c.user).take(1).list.headOption } match {
           case Some(user) =>
-            if (BCrypt.checkpw(c.pass, user.passwordHash)) Some(user)
+            if (BCrypt.checkpw(c.pass, user.passwordHash)) SessionFactory(user.id) match {
+              case Some(session) => Some((user, session))
+              case _ => None
+            }
             else None
           case _ => None
         }
@@ -41,19 +42,24 @@ trait Authenticator extends DB {
     }
   }
 
-  def tokenAuthenticator(credentials: Option[Token]): Future[Option[Profile]] = future {
+  def tokenAuthenticator(credentials: Option[Token]): Future[Option[(Profile, Session)]] = future {
     credentials match {
       case Some(t) => query { 
         (for {
-          profile <- Profiles if profile.id === t.user
-          session <- Sessions 
-          if profile.id     === session.profile &&
-             session.series === t.series &&
-             session.token  === t.token  &&
-             session.expirationTime > System.currentTimeMillis()
-        } yield profile).take(1).list.headOption
+          p <- Profiles if p.id === t.profile
+          s <- Sessions 
+          if p.id     === s.profile &&
+             s.series === t.series &&
+             s.token  === t.token  &&
+             s.expirationTime > System.currentTimeMillis()
+        } yield (p, s)).take(1).list.headOption.flatMap {
+          a => SessionFactory(a._2) match {
+            case Some(session) => println("Generated token: " + session); Some(a._1, session)
+            case _ => println("Failed to generate new token"); None
+          }
+        }
       }
-      case _ => None
+      case _ => println("No token"); None
     }
   }
 }

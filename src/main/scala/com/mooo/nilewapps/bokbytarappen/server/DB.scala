@@ -35,12 +35,6 @@ trait DB {
     phoneNumber: Option[String],
     university: String)
 
-  case class Session(
-    profile: String,
-    series: String,
-    token: String,
-    expirationTime: Long)
-
   /**
    * Tables
    */
