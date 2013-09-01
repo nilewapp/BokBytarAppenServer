@@ -26,6 +26,9 @@ import BasicTokenAuthenticator._
 
 trait Authenticator extends DB {
 
+  /**
+   * Takes a user/pass-pair, check their validity and returns the profile of the user and a new Session.
+   */
   def passwordAuthenticator(credentials: Option[UserPass]): Future[Option[(Profile, Session)]] = future {
     credentials match {
       case Some(c) =>
@@ -42,6 +45,9 @@ trait Authenticator extends DB {
     }
   }
 
+  /**
+   * Takes a token, checks its validity, returns the profile the token belongs to and a new Session.
+   */
   def tokenAuthenticator(credentials: Option[Token]): Future[Option[(Profile, Session)]] = future {
     credentials match {
       case Some(t) => query { 

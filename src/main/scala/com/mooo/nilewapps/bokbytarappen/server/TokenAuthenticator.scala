@@ -23,14 +23,19 @@ import http._
 import httpx._
 import unmarshalling._
 
+/**
+ * Defines the Token and the TokenAuthenticator types
+ */
 object BasicTokenAuthenticator {
   case class Token(profile: String, series: String, token: String)
   object Token {
     def apply(vals: Map[String, String]): Option[Token] = 
       try {
-        Some(Token(vals("profile"), vals("series"), vals("token")))
+        val t = Token(vals("profile"), vals("series"), vals("token"))
+        println(t)
+        Some(t)
       } catch {
-        case _: NoSuchElementException => None
+        case e: NoSuchElementException =>  None
       }
   }
   type TokenAuthenticator[U] = Option[Token] => Future[Option[U]]
@@ -38,6 +43,10 @@ object BasicTokenAuthenticator {
 
 import BasicTokenAuthenticator._
 
+/**
+ * Defines fuctions to extract a Token from an `Authorization` header with
+ * the format `Nilewapp key="value",...` to a Map
+ */
 class BasicTokenAuthenticator[U](val realm: String, val authenticator: TokenAuthenticator[U])(implicit val executionContext: ExecutionContext)
     extends ContextAuthenticator[U] {
       
@@ -50,15 +59,37 @@ class BasicTokenAuthenticator[U](val realm: String, val authenticator: TokenAuth
     }
   }
 
-  def scheme = "Basic"
+  def scheme = "Nilewapp "
+
   def params(ctx: RequestContext): Map[String, String] = Map.empty
+
+  /**
+   * Extracts the token from the Authorization header and passes it as
+   * the argument to the authenticator.
+   */
   def authenticate(ctx: RequestContext) = {
     authenticator {
-      ctx.request.entity.as[FormData] match {
-        case Right(FormData(formFields)) => Token(formFields)
+      ctx.request.headers.find(_.name == "Authorization") match {
+        case Some(head) => 
+          if (head.value.startsWith(scheme)) {
+            Token(asMap(head.value.replaceFirst(scheme, "")))
+          } else None
         case _ => None
       }
     }
+  }
+
+  /**
+   * Decodes the token in the Authorization header.
+   */
+  def asMap(s: String) = {
+    val de = new sun.misc.BASE64Decoder()
+    s.split(",").map { 
+      a => a.split("=") match { 
+        case Array(key, value @ _*) => 
+          (key, new String(de.decodeBuffer(value.mkString("=").replaceAll("\"", ""))))
+      }
+    }.toMap
   }
 }
 

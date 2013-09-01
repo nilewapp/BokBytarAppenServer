@@ -107,6 +107,7 @@ trait Service extends HttpService with DB with Authenticator {
               query {
                 val salt = BCrypt.gensalt()
                 val passwordHash = BCrypt.hashpw(password, salt)
+                println("University ", university)
                 Profiles.insert(Profile(email, passwordHash, salt, name, phone, university))
                 "Successfully registered " + email
               }
@@ -120,7 +121,7 @@ trait Service extends HttpService with DB with Authenticator {
      */
     path("unregister") {
       post {
-        (authenticate(new BasicTokenAuthenticator("Unregistration", tokenAuthenticator))) { case (user, session) =>
+        (authenticate(new BasicTokenAuthenticator("Unregistration", tokenAuthenticator)) | authenticate(new BasicHttpAuthenticator("Unregistration", passwordAuthenticator))) { case (user, session) =>
           formField('name) { name =>
             respondWithMediaType(`application/json`) {
               complete {
