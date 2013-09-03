@@ -41,7 +41,7 @@ in any web browser.
 
 5. Copy the generated file `keystore.jks` to `<server directory>/src/main/resources/`
 
-6. Update [Security.scala](/src/main/scala/com/mooo/nilewapp/bokbytarappen/server/Security.scala) to contain your password
+6. Update [Security.scala](/src/main/scala/com/mooo/nilewapps/bokbytarappen/server/Security.scala) to contain your password
 
         ...
         val truststore_password = "your password"
