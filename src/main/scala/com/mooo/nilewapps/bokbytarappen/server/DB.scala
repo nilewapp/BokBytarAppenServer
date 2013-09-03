@@ -18,13 +18,16 @@ package com.mooo.nilewapps.bokbytarappen.server
 import scala.slick.driver.H2Driver.simple._
 import Database.threadLocalSession
 
+import Security._
+
 /**
  * Defines tables and provides database access
  */
 trait DB {
 
   val DBName = "db"
-  lazy val url = "jdbc:h2:" + getClass.getResource("/").getPath() + DBName
+  lazy val url = "jdbc:h2:" + getClass.getResource("/").getPath() + DBName + 
+    ";USER=" + dbOwner + ";PASSWORD=" + dbPassword
   lazy val db = Database.forURL(url, driver = "org.h2.Driver")
 
   case class Profile(

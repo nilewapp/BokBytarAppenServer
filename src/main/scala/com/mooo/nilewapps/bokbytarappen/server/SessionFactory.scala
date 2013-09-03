@@ -24,12 +24,19 @@ import Database.threadLocalSession
 
 object SessionFactory extends DB {
 
-  val expirationTime = 1000000
+  /**
+   * The duration in ms for which the session token is valid.
+   */
+  val expirationTime = 10000
 
+  /**
+   * Validates the session, produces a new one and updates the database.
+   */
   def apply(s: Session) = {
     query { 
       lazy val time = System.currentTimeMillis()
-      lazy val newSession = Session(s.profile, s.series, generateSecureString(), time + expirationTime)
+      lazy val newSession =
+        Session(s.profile, s.series, generateSecureString(), time + expirationTime)
       (for {
         session <- Sessions
         if session.profile === s.profile &&
@@ -43,10 +50,16 @@ object SessionFactory extends DB {
     }
   }
 
+  /**
+   * Generates a new session token for an existing user and stores in in the database.
+   */
   def apply(user: String) = {
     query {
       if (!Query(Profiles).filter(_.id === user).list.isEmpty) {
-        lazy val session = Session(user, generateSecureString(), generateSecureString(), System.currentTimeMillis() + expirationTime)
+        lazy val session = Session(user,
+          generateSecureString(),
+          generateSecureString(),
+          System.currentTimeMillis() + expirationTime)
         if (Sessions.insert(session) == 1) Some(session)
         else None
       } else {

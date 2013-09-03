@@ -41,10 +41,10 @@ in any web browser.
 
 5. Copy the generated file `keystore.jks` to `<server directory>/src/main/resources/`
 
-6. Update Security.scala to contain your password
+6. Update [Security.scala](/src/com/moo/nilewapp/bokbytarappen/server/Security.scala) to contain your password
 
         ...
-        val password = "your password"
+        val truststore_password = "your password"
         ...
 
 7. Copy the generated file `public_truststore.bks` to `<app directory>/res/raw/`

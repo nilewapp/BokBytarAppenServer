@@ -16,5 +16,7 @@
 package com.mooo.nilewapps.bokbytarappen.server
 
 object Security {
-  val password = "testpassword"
+  val truststorePassword = "testpassword"
+  val dbOwner = "owner"
+  val dbPassword = "testpassword"
 }

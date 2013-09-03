@@ -107,7 +107,6 @@ trait Service extends HttpService with DB with Authenticator {
               query {
                 val salt = BCrypt.gensalt()
                 val passwordHash = BCrypt.hashpw(password, salt)
-                println("University ", university)
                 Profiles.insert(Profile(email, passwordHash, salt, name, phone, university))
                 "Successfully registered " + email
               }
