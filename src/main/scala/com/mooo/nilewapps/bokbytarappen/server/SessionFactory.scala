@@ -27,7 +27,7 @@ object SessionFactory extends DB {
   /**
    * The duration in ms for which the session token is valid.
    */
-  val expirationTime = 10000
+  val expirationTime = 100000
 
   /**
    * Validates the session, produces a new one and updates the database.
