@@ -31,9 +31,7 @@ object BasicTokenAuthenticator {
   object Token {
     def apply(vals: Map[String, String]): Option[Token] = 
       try {
-        val t = Token(vals("profile"), vals("series"), vals("token"))
-        println(t)
-        Some(t)
+        Some(Token(vals("profile"), vals("series"), vals("token")))
       } catch {
         case e: NoSuchElementException =>  None
       }
