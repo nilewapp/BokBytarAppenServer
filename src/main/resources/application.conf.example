@@ -1,0 +1,28 @@
+akka {
+  loglevel = INFO
+}
+
+spray.can.server {
+  request-timeout = 20 s
+  ssl-encryption = on
+}
+
+http-server {
+  interface = localhost
+  port = 8443
+}
+
+db {
+  name = db
+  user = owner
+  pass = testpassword
+}
+
+truststore {
+  path = /keystore.jks
+  pass = testpassword
+}
+
+session {
+  expiration-time = 7 d
+}

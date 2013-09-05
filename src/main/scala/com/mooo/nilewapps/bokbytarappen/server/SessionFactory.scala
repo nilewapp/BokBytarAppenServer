@@ -22,17 +22,20 @@ import sun.misc.BASE64Encoder
 import scala.slick.driver.H2Driver.simple._
 import Database.threadLocalSession
 
+import com.typesafe.config._
+
 object SessionFactory extends DB {
 
   /**
    * The duration in ms for which the session token is valid.
    */
-  val expirationTime = 100000
+  lazy val expirationTime = ConfigFactory.load().getMilliseconds("session.expiration-time")
 
   /**
    * Validates the session, produces a new one and updates the database.
    */
   def apply(s: Session) = {
+    println(expirationTime)
     query { 
       lazy val time = System.currentTimeMillis()
       lazy val newSession =

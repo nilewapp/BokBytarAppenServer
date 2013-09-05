@@ -10,3 +10,4 @@ test-output/
 *.bks
 *.cert
 /libs
+application.conf

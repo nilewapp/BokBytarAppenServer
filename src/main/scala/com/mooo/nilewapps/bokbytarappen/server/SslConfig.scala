@@ -19,7 +19,7 @@ import java.security.{SecureRandom, KeyStore}
 import javax.net.ssl.{KeyManagerFactory, SSLContext, TrustManagerFactory}
 import spray.io._
 
-import Security._
+import com.typesafe.config._
 
 /**
  * Provides the SSL configuration for the server
@@ -27,12 +27,15 @@ import Security._
 trait SslConfig {
 
   implicit def sslContext: SSLContext = {
-    val keyStoreResource = "/keystore.jks"
+    val config = ConfigFactory.load().getConfig("truststore")
+
+    val keyStoreResource = config.getString("path")
+    val password = config.getString("pass")
 
     val keyStore = KeyStore.getInstance("jks")
-    keyStore.load(getClass.getResourceAsStream(keyStoreResource), truststorePassword.toCharArray)
+    keyStore.load(getClass.getResourceAsStream(keyStoreResource), password.toCharArray)
     val keyManagerFactory = KeyManagerFactory.getInstance("SunX509")
-    keyManagerFactory.init(keyStore, truststorePassword.toCharArray)
+    keyManagerFactory.init(keyStore, password.toCharArray)
     val trustManagerFactory = TrustManagerFactory.getInstance("SunX509")
     trustManagerFactory.init(keyStore)
     val context = SSLContext.getInstance("TLS")
