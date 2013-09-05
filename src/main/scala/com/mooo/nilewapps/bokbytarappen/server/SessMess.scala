@@ -16,5 +16,5 @@
 package com.mooo.nilewapps.bokbytarappen.server
 
 case class SessMess[T](
-  sess: Session,
+  sess: Option[Session],
   mess: T)

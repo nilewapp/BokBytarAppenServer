@@ -32,7 +32,7 @@ trait Authenticator extends DB {
   def passwordAuthenticator(credentials: Option[UserPass]): Future[Option[(Profile, Session)]] = future {
     credentials match {
       case Some(c) =>
-        query { Query(Profiles).filter(_.id === c.user).take(1).list.headOption } match {
+        query { Query(Profiles).filter(_.id === c.user).list.headOption } match {
           case Some(user) =>
             if (BCrypt.checkpw(c.pass, user.passwordHash)) SessionFactory(user.id) match {
               case Some(session) => Some((user, session))

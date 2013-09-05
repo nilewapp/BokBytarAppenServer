@@ -96,11 +96,11 @@ trait Service extends HttpService with DB with Authenticator {
         }
       }
     } ~
-    /**
-     * Registers the user
-     */
-    path("register") {
-      post {
+    post {
+      /**
+       * Registers the user
+       */
+      path("register") {
         formFields('email, 'name, 'phone ?, 'university, 'password) { (email, name, phone, university, password) =>
           respondWithMediaType(`text/plain`) {
             complete {
@@ -113,13 +113,11 @@ trait Service extends HttpService with DB with Authenticator {
             }
           }
         }
-      }
-    } ~
-    /**
-     * Unregister the user
-     */
-    path("unregister") {
-      post {
+      } ~
+      /**
+       * Unregister the user
+       */
+      path("unregister") {
         (authenticate(new BasicTokenAuthenticator("Unregistration", tokenAuthenticator)) | authenticate(new BasicHttpAuthenticator("Unregistration", passwordAuthenticator))) { case (user, session) =>
           formField('name) { name =>
             respondWithMediaType(`application/json`) {
@@ -132,27 +130,46 @@ trait Service extends HttpService with DB with Authenticator {
                 implicit val MessageFormat = jsonFormat2(Message)
                 implicit val SessMessFormat = jsonFormat2(SessMess[Message])
 
-                SessMess(session, Message(name, "testmessage"))
+                SessMess(Some(session), Message(name, "testmessage"))
+              }
+            }
+          }
+        }
+      } ~
+      /**
+       * Verifies a password and returns an authentication token.
+       */
+      path("login") {
+        authenticate(new BasicHttpAuthenticator("Login", passwordAuthenticator)) { case (user, session) =>
+          respondWithMediaType(`application/json`) {
+            complete {
+              implicit val SessMessFormat = jsonFormat2(SessMess[String])
+              SessMess(Some(session), "")
+            }
+          }
+        }
+      } ~
+      /**
+       * Allows the user to change password
+       */
+      path("change-password") {
+        authenticate(new BasicHttpAuthenticator("Change password", passwordAuthenticator)) { case (user, session) =>
+          formField('password) { password =>
+            respondWithMediaType(`application/json`) {
+              complete {
+                query {
+                  val salt = BCrypt.gensalt()
+                  val passwordHash = BCrypt.hashpw(password, salt)
+                  val old = Query(Profiles).filter(_.id === user.id)
+                  old.update(Profile(user.id, passwordHash, salt, user.name, user.phoneNumber, user.university))
+                  implicit val SessMessFormat = jsonFormat2(SessMess[String])
+                  SessMess(None, "Password successfully changed")
+                }
               }
             }
           }
         }
       }
-    } ~
-    /**
-     * Verifies a password and returns an authentication token.
-     */
-    path("login") {
-      post {
-        authenticate(new BasicHttpAuthenticator("Login", passwordAuthenticator)) { case (user, session) =>
-          respondWithMediaType(`application/json`) {
-            complete {
-              implicit val SessMessFormat = jsonFormat2(SessMess[String])
-              SessMess(session, "")
-            }
-          }
-
-        }
-      }
+      
     }
 }
