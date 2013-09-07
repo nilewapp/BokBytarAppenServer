@@ -27,15 +27,6 @@ import unmarshalling._
  * Defines the Token and the TokenAuthenticator types
  */
 object BasicTokenAuthenticator {
-  case class Token(profile: String, series: String, token: String)
-  object Token {
-    def apply(vals: Map[String, String]): Option[Token] = 
-      try {
-        Some(Token(vals("profile"), vals("series"), vals("token")))
-      } catch {
-        case e: NoSuchElementException =>  None
-      }
-  }
   type TokenAuthenticator[U] = Option[Token] => Future[Option[U]]
 }
 
@@ -70,7 +61,7 @@ class BasicTokenAuthenticator[U](val realm: String, val authenticator: TokenAuth
       ctx.request.headers.find(_.name == "Authorization") match {
         case Some(head) => 
           if (head.value.startsWith(scheme)) {
-            Token(asMap(head.value.replaceFirst(scheme, "")))
+            TokenFactory(asMap(head.value.replaceFirst(scheme, "")))
           } else None
         case _ => None
       }

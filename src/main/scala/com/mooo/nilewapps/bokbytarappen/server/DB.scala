@@ -33,12 +33,19 @@ trait DB {
   lazy val db = Database.forURL(url, driver = "org.h2.Driver")
 
   case class Profile(
-    id: String, 
+    id: Int, 
+    email: String,
     passwordHash: String,
     salt: String,
     name: String,
     phoneNumber: Option[String],
     university: String)
+
+  case class Session(
+    id: Int,
+    series: String,
+    token: String,
+    expirationTime: Long)
 
   /**
    * Tables
@@ -64,40 +71,63 @@ trait DB {
   }
 
   object Profiles extends Table[Profile]("PROFILES") {
-    def id = column[String]("ID", O.PrimaryKey)
+    def id = column[Int]("ID", O.AutoInc, O.PrimaryKey)
+    def email = column[String]("EMAIL")
     def passwordHash = column[String]("PASSWORD_HASH")
     def salt = column[String]("SALT")
     def name = column[String]("NAME")
-    def phoneNumber = column[Option[String]]("PHONE_NUMBER", O.Nullable)
+    def phoneNumber = column[Option[String]]("PHONE_NUMBER")
     def university = column[String]("UNIVERSITY")
-    def * = id ~ passwordHash ~ salt ~ name ~ phoneNumber ~ university <> (Profile, Profile.unapply _)
+    def * = id ~ email ~ passwordHash ~ salt ~ name ~ phoneNumber ~ university <> (Profile, Profile.unapply _)
+    def emailIndex = index("PROFILES_EMAIL_INDEX", email, unique = true)
     def universityFK = foreignKey("UNIVERSITY_FK", university, Universities)(_.name)
   }
 
-  object WantedBooks extends Table[(String, Int)]("WANTED_BOOKS") {
-    def profileId = column[String]("PROFILE_ID")
+  object WantedBooks extends Table[(Int, Int)]("WANTED_BOOKS") {
+    def profileId = column[Int]("PROFILE_ID")
     def isbn13 = column[Int]("ISBN")
     def * = profileId ~ isbn13
-    def wantedBooksPK = primaryKey("WANTED_BOOKS_PK", profileId ~ isbn13)
+    def wantedBooksPK = primaryKey("WANTED_BOOKS_PK", *)
     def profileFK = foreignKey("WANTED_PROFILE_FK", profileId, Profiles)(_.id)
   }
 
-  object OwnedBooks extends Table[(String, Int)]("OWNED_BOOKS") {
-    def profileId = column[String]("PROFILE_ID")
+  object OwnedBooks extends Table[(Int, Int)]("OWNED_BOOKS") {
+    def profileId = column[Int]("PROFILE_ID")
     def isbn13 = column[Int]("ISBN")
     def * = profileId ~ isbn13
-    def ownedBooksPK = primaryKey("OWNED_BOOKS_PK", profileId ~ isbn13)
+    def ownedBooksPK = primaryKey("OWNED_BOOKS_PK", *)
     def profileFK = foreignKey("OWNED_PROFILE_FK", profileId, Profiles)(_.id)
   }
 
   object Sessions extends Table[Session]("SESSION") {
-    def profile = column[String]("PROFILE")
+    def id = column[Int]("PROFILE")
     def series = column[String]("SERIES")
     def token = column[String]("TOKEN")
     def expirationTime = column[Long]("EXPIRATION_TIME")
-    def * = profile ~ series ~ token ~ expirationTime <> (Session, Session.unapply _)
-    def sessionPK = primaryKey("SESSION_PK", profile ~ series ~ token)
-    def profileFK = foreignKey("SESSION_PROFILE_FK", profile, Profiles)(_.id)
+    def * = id ~ series ~ token ~ expirationTime <> (Session, Session.unapply _)
+    def sessionPK = primaryKey("SESSION_PK", id ~ series)
+    def profileFK = foreignKey("SESSION_PROFILE_FK", id, Profiles)(_.id)
+  }
+
+  import GroupPrivacy._
+  object Groups extends Table[Group]("GROUPS") {
+    def id = column[Int]("ID", O.AutoInc, O.PrimaryKey)
+    def name = column[String]("NAME")
+    def owner = column[Int]("OWNER")
+    def description = column[String]("DESCRIPTION")
+    def privacy = column[GroupPrivacy]("PRIVACY")
+    def parent = column[Option[Int]]("PARENT")
+    def * = id.? ~ name ~ owner ~ description ~ privacy ~ parent <> (Group, Group.unapply _)
+    def ownerFK = foreignKey("GROUPS_OWNER_FK", owner, Profiles)(_.id)
+  }
+
+  object Members extends Table[(Int, Int)]("MEMBERS") {
+    def group = column[Int]("GROUP")
+    def profile = column[Int]("PROFILE")
+    def * = group ~ profile
+    def membersPK = primaryKey("MEMBERS_PK", *)
+    def groupFK = foreignKey("MEMBERS_GROUP_FK", group, Groups)(_.id)
+    def profileFK = foreignKey("MEMBERS_PROFILE_FK", profile, Profiles)(_.id)
   }
 
   def query[T](f: => T): T = db withSession f

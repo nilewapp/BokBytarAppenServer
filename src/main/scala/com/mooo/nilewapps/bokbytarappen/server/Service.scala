@@ -30,7 +30,7 @@ import MediaTypes._
 import scala.slick.driver.H2Driver.simple._
 import Database.threadLocalSession
 
-import SessionJsonProtocol._
+import TokenJsonProtocol._
 
 import scala.language.postfixOps
 
@@ -107,7 +107,7 @@ trait Service extends HttpService with DB with Authenticator {
               query {
                 val salt = BCrypt.gensalt()
                 val passwordHash = BCrypt.hashpw(password, salt)
-                Profiles.insert(Profile(email, passwordHash, salt, name, phone, university))
+                DBManager.insertProfile(email, passwordHash, salt, name, phone, university)
                 "Successfully registered " + email
               }
             }
@@ -161,7 +161,7 @@ trait Service extends HttpService with DB with Authenticator {
                   val salt = BCrypt.gensalt()
                   val passwordHash = BCrypt.hashpw(password, salt)
                   val old = Query(Profiles).filter(_.id === user.id)
-                  old.update(Profile(user.id, passwordHash, salt, user.name, user.phoneNumber, user.university))
+                  old.update(Profile(user.id, user.email, passwordHash, salt, user.name, user.phoneNumber, user.university))
                   implicit val SessMessFormat = jsonFormat2(SessMess[String])
                   SessMess(None, "Password successfully changed")
                 }
