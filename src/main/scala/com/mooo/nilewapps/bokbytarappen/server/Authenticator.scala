@@ -20,6 +20,7 @@ import ExecutionContext.Implicits.global
 import spray.routing.authentication.UserPass
 
 import java.security.SecureRandom
+import java.security.MessageDigest
 import java.math.BigInteger
 import sun.misc.BASE64Encoder
 
@@ -38,6 +39,11 @@ trait Authenticator extends DB {
   lazy val expirationTime = ConfigFactory.load().getMilliseconds("session.expiration-time")
 
   /**
+   * Used for hashing authentication tokens before storing them in the database.
+   */
+  lazy val sha256 = MessageDigest.getInstance("SHA-256")
+
+  /**
    * Takes a user/pass-pair, check their validity and returns the profile of the user and a new Session.
    */
   def passwordAuthenticator(credentials: Option[UserPass]): Future[Option[(Profile, Token)]] = future {
@@ -50,7 +56,7 @@ trait Authenticator extends DB {
                 lazy val series = generateSecureString()
                 lazy val token = generateSecureString()
                 lazy val time = System.currentTimeMillis() + expirationTime
-                if (Sessions.insert(Session(profile.id, series, token, time)) == 1)
+                if (Sessions.insert(Session(profile.id, hash(series), hash(token), time)) == 1)
                   Some(profile, Token(profile.email, series, token, Some(time)))
                 else None
               } else None
@@ -72,17 +78,18 @@ trait Authenticator extends DB {
             lazy val token = generateSecureString()
             lazy val time = System.currentTimeMillis()
             lazy val expires = time + expirationTime
+            lazy val seriesHash = hash(t.series)
             (for {
               s <- Sessions 
-              if s.id     === profile.id &&
-                 s.series === t.series   &&
-                 s.token  === t.token    &&
+              if s.id        === profile.id    &&
+                 s.series    === seriesHash    &&
+                 s.tokenHash === hash(t.token) &&
                  s.expirationTime > System.currentTimeMillis()
-            } yield s).update(Session(profile.id, t.series, token, expires)) match {
+            } yield s).update(Session(profile.id, seriesHash,  hash(token), expires)) match {
               case 1 => 
                 println("Generated token: " + Token(t.email, t.series, token, Some(expires)))
                 Some(profile, Token(t.email, t.series, token, Some(expires)))
-              case _ => println("Failed to generate new token"); None
+              case 0 => println("Failed to generate new token"); None
             }
           case _ => None
         }
@@ -96,5 +103,8 @@ trait Authenticator extends DB {
     val token = new BigInteger(130, sr).toString(64).getBytes
     new String(new BASE64Encoder().encode(token))
   }
+
+  def hash(s: String) =
+    new String(sha256.digest(s.getBytes))
 
 }

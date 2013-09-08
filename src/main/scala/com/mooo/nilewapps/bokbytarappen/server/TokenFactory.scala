@@ -28,6 +28,6 @@ object TokenFactory {
     try {
       Some(Token(vals("email"), vals("series"), vals("token"), None))
     } catch {
-      case e: NoSuchElementException =>  None
+      case e: NoSuchElementException => None
     }
 }

@@ -43,7 +43,7 @@ trait DB {
   case class Session(
     id: Int,
     series: String,
-    token: String,
+    tokenHash: String,
     expirationTime: Long)
 
   /**
@@ -100,9 +100,9 @@ trait DB {
   object Sessions extends Table[Session]("SESSION") {
     def id = column[Int]("PROFILE")
     def series = column[String]("SERIES")
-    def token = column[String]("TOKEN")
+    def tokenHash = column[String]("TOKEN")
     def expirationTime = column[Long]("EXPIRATION_TIME")
-    def * = id ~ series ~ token ~ expirationTime <> (Session, Session.unapply _)
+    def * = id ~ series ~ tokenHash ~ expirationTime <> (Session, Session.unapply _)
     def sessionPK = primaryKey("SESSION_PK", id ~ series)
     def profileFK = foreignKey("SESSION_PROFILE_FK", id, Profiles)(_.id)
   }
