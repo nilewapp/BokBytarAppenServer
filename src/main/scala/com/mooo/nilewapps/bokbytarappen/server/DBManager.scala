@@ -35,15 +35,14 @@ object DBManager extends DB {
     all.drop
   }
 
-  def insertProfile(email: String, passwordHash: String, salt: String, name: String, phoneNumber: Option[String], university: String) {
+  def insertProfile(email: String, passwordHash: String, name: String, phoneNumber: Option[String], university: String) {
     query {
       (Profiles.email ~ 
        Profiles.passwordHash ~
-       Profiles.salt ~
        Profiles.name ~
        Profiles.phoneNumber ~
        Profiles.university).insert(
-         (email, passwordHash, salt, name, phoneNumber, university))
+         (email, passwordHash, name, phoneNumber, university))
     }
   }
 

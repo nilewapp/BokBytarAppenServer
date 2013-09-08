@@ -72,7 +72,7 @@ class BasicTokenAuthenticator[U](val realm: String, val authenticator: TokenAuth
    * Decodes the token in the Authorization header.
    */
   def asMap(s: String) = {
-    val de = new sun.misc.BASE64Decoder()
+    lazy val de = new sun.misc.BASE64Decoder()
     s.split(",").map { 
       a => a.split("=") match { 
         case Array(key, value @ _*) => 

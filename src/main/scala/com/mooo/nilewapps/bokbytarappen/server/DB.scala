@@ -36,7 +36,6 @@ trait DB {
     id: Int, 
     email: String,
     passwordHash: String,
-    salt: String,
     name: String,
     phoneNumber: Option[String],
     university: String)
@@ -74,11 +73,10 @@ trait DB {
     def id = column[Int]("ID", O.AutoInc, O.PrimaryKey)
     def email = column[String]("EMAIL")
     def passwordHash = column[String]("PASSWORD_HASH")
-    def salt = column[String]("SALT")
     def name = column[String]("NAME")
     def phoneNumber = column[Option[String]]("PHONE_NUMBER")
     def university = column[String]("UNIVERSITY")
-    def * = id ~ email ~ passwordHash ~ salt ~ name ~ phoneNumber ~ university <> (Profile, Profile.unapply _)
+    def * = id ~ email ~ passwordHash ~ name ~ phoneNumber ~ university <> (Profile, Profile.unapply _)
     def emailIndex = index("PROFILES_EMAIL_INDEX", email, unique = true)
     def universityFK = foreignKey("UNIVERSITY_FK", university, Universities)(_.name)
   }

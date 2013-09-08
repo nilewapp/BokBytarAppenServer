@@ -105,9 +105,8 @@ trait Service extends HttpService with DB with Authenticator {
           respondWithMediaType(`text/plain`) {
             complete {
               query {
-                val salt = BCrypt.gensalt()
-                val passwordHash = BCrypt.hashpw(password, salt)
-                DBManager.insertProfile(email, passwordHash, salt, name, phone, university)
+                val passwordHash = BCrypt.hashpw(password, BCrypt.gensalt())
+                DBManager.insertProfile(email, passwordHash, name, phone, university)
                 "Successfully registered " + email
               }
             }
@@ -158,10 +157,9 @@ trait Service extends HttpService with DB with Authenticator {
             respondWithMediaType(`application/json`) {
               complete {
                 query {
-                  val salt = BCrypt.gensalt()
-                  val passwordHash = BCrypt.hashpw(password, salt)
-                  val old = Query(Profiles).filter(_.id === user.id)
-                  old.update(Profile(user.id, user.email, passwordHash, salt, user.name, user.phoneNumber, user.university))
+                  lazy val passwordHash = BCrypt.hashpw(password, BCrypt.gensalt())
+                  lazy val old = Query(Profiles).filter(_.id === user.id)
+                  old.update(Profile(user.id, user.email, passwordHash, user.name, user.phoneNumber, user.university))
                   implicit val SessMessFormat = jsonFormat2(SessMess[String])
                   SessMess(None, "Password successfully changed")
                 }
