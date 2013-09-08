@@ -58,8 +58,10 @@ trait Authenticator extends DB {
                 lazy val time = System.currentTimeMillis() + expirationTime
                 if (Sessions.insert(Session(profile.id, hash(series), hash(token), time)) == 1)
                   Some(profile, Token(profile.email, series, token, Some(time)))
-                else None
-              } else None
+                else 
+                  None
+              } else 
+                None
             case _ => None
           }
         }
@@ -89,7 +91,9 @@ trait Authenticator extends DB {
               case 1 => 
                 println("Generated token: " + Token(t.email, t.series, token, Some(expires)))
                 Some(profile, Token(t.email, t.series, token, Some(expires)))
-              case 0 => println("Failed to generate new token"); None
+              case 0 => 
+                println("Failed to generate new token")
+                None
             }
           case _ => None
         }

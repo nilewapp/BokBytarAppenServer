@@ -1,5 +1,24 @@
 ## TODO
 
+### Password strength
+
+Any password that is stored in the database needs to be of sufficient
+entropy. The password therefore needs to be validated before it is stored.
+
+### Forgot password
+
+The user should be able to retrieve access to an account if he has forgotten
+his password but remembers his registered email address. When such a request
+is received, the server should email the user a link to a page that lets the
+user choose a new password. This link should contain a large access token
+that is valid for a short period of time. Only a hashed and salted (using
+BCrypt) version of the token should be stored on the server.
+
+### Session storage
+
+At the moment, session data is stored hashed using SHA-256 in the database.
+Ideally, the data should be hashed and salted using BCrypt.
+
 ### Database services
 
 The following features need to be implemented in the database with associated 
