@@ -23,6 +23,7 @@ import spray.routing.authentication._
 import spray.http._
 import spray.httpx.marshalling._
 import spray.httpx.SprayJsonSupport
+import spray.util.LoggingContext
 
 import spray.json.DefaultJsonProtocol
 import SprayJsonSupport._
@@ -35,12 +36,21 @@ import TokenJsonProtocol._
 
 import scala.language.postfixOps
 
+  object SuperSpecialException extends Exception
+
 /**
  * Actor that runs the service
  */
 class ServiceActor extends Actor with Service {
 
   def actorRefFactory = context
+
+  implicit def exceptionHandler(implicit log: LoggingContext) =
+    ExceptionHandler.fromPF {
+      case SuperSpecialException => ctx =>
+        log.warning("{} encountered while handling request: {}", ctx.request)
+        ctx.complete(489, "Super special error!")
+    }
 
   def receive = runRoute(routes ~
     /**
@@ -74,6 +84,15 @@ trait Service extends HttpService with DB with Authenticator {
                 <h1>Say hello to <i>Bokbytarappen's server</i>!</h1>
               </body>
             </html>
+          }
+        }
+      }
+    } ~
+    path("special") {
+      get {
+        validate(1 > 2, "1 must be greater than 2") {
+          complete {
+            throw SuperSpecialException
           }
         }
       }
