@@ -17,14 +17,15 @@ package com.mooo.nilewapps.bokbytarappen.server
 
 import scala.concurrent.duration._
 import akka.actor.Actor
-import spray._
-import routing._
-import authentication._
-import http._
-import httpx.SprayJsonSupport
+
+import spray.routing._
+import spray.routing.authentication._
+import spray.http._
+import spray.httpx.marshalling._
+import spray.httpx.SprayJsonSupport
+
+import spray.json.DefaultJsonProtocol
 import SprayJsonSupport._
-import httpx.marshalling._
-import json.DefaultJsonProtocol
 import MediaTypes._
 
 import scala.slick.driver.H2Driver.simple._
