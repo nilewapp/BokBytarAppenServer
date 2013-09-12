@@ -33,10 +33,11 @@ import scala.slick.driver.H2Driver.simple._
 import Database.threadLocalSession
 
 import TokenJsonProtocol._
+import ServiceErrors._
 
 import scala.language.postfixOps
 
-  object SuperSpecialException extends Exception
+object SuperSpecialException extends Exception
 
 /**
  * Actor that runs the service
@@ -48,6 +49,7 @@ class ServiceActor extends Actor with Service {
   implicit def exceptionHandler(implicit log: LoggingContext) =
     ExceptionHandler.fromPF {
       case SuperSpecialException => ctx =>
+        println(ctx.getClass)
         log.warning("{} encountered while handling request: {}", ctx.request)
         ctx.complete(489, "Super special error!")
     }
@@ -93,6 +95,17 @@ trait Service extends HttpService with DB with Authenticator {
         validate(1 > 2, "1 must be greater than 2") {
           complete {
             throw SuperSpecialException
+          }
+        }
+      }
+    } ~
+    path("custom-error" / Rest) { password =>
+      get {
+        respondWithMediaType(`application/json`) {
+          validate(password == "hello", BadPassword) {
+            complete {
+              "Validated"
+            }
           }
         }
       }
