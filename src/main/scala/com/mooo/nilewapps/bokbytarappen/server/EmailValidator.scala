@@ -15,23 +15,27 @@
  */
 package com.mooo.nilewapps.bokbytarappen.server
 
-import scala.language.implicitConversions
-
-import spray.json._
-
-import ServiceErrorCodes._
-
-sealed case class ServiceError(val code: Int, val reason: String)
+import scala.slick.driver.H2Driver.simple._
+import Database.threadLocalSession
 
 /**
- * Defines service error codes.
+ * Defines methods to validate email addresses.
  */
-object ServiceErrors {
+object EmailValidator extends DB {
 
-  implicit def ServiceError2String(e: ServiceError) =
-    JsObject(("code", JsNumber(e.code)), ("reason", JsString(e.reason))).toString
+  val emailRegex = """^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$""".r
 
-  val BadPassword = ServiceError(BAD_PASSWORD, "Password doesn't have sufficient guessing entropy.")
-  val UnavailableEmail = ServiceError(UNAVAILABLE_EMAIL, "Email address is already registered with another account.")
-  val InvalidEmail = ServiceError(INVALID_EMAIL, "Email address is not valid.")
+  /**
+   * Returns true if the given email address matches the format of a
+   * valid email address.
+   */
+  def isValid(email: String) = emailRegex.findFirstIn(email).isDefined 
+
+  /**
+   * Returns true if the given email address is not already registered.
+   */
+  def isAvailable(email: String) =
+    query {
+      !Query(Profiles).filter(_.email === email).list.headOption.isDefined
+    }
 }

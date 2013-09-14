@@ -23,10 +23,7 @@ object PasswordValidator {
   /**
    * Returns the given password if its guessing entropy is above a certain threshold.
    */
-  def threshold(pass: String, thresh: Int = 18): Option[String] = {
-    if (strength(pass) > thresh) Some(pass)
-    else None
-  }
+  def threshold(pass: String, thresh: Int = 18) = strength(pass) > thresh
 
   /**
    * Estimates the guessing entropy of a password by calucalting its

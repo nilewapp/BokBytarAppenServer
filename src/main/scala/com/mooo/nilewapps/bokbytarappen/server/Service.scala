@@ -46,28 +46,7 @@ class ServiceActor extends Actor with Service {
 
   def actorRefFactory = context
 
-  implicit def exceptionHandler(implicit log: LoggingContext) =
-    ExceptionHandler.fromPF {
-      case SuperSpecialException => ctx =>
-        println(ctx.getClass)
-        log.warning("{} encountered while handling request: {}", ctx.request)
-        ctx.complete(489, "Super special error!")
-    }
-
-  def receive = runRoute(routes ~
-    /**
-     * Stops the server. Can only be accessed from localhost.
-     */
-    path("stop") {
-      host("localhost") {
-        get {
-          complete {
-            context.system.scheduler.scheduleOnce(1.second) { context.system.shutdown() }
-            "shutdown"
-          }
-        }
-      }
-    })
+  def receive = runRoute(routes)
 
 }
 
@@ -75,6 +54,10 @@ class ServiceActor extends Actor with Service {
  * Provides all functionality of the server
  */
 trait Service extends HttpService with DB with Authenticator {
+
+  def authWithPass = authenticate(new BasicHttpAuthenticator("Protected", passwordAuthenticator))
+
+  def authWithToken = authenticate(new BasicTokenAuthenticator("Protected", tokenAuthenticator))
 
   val routes =
     path("") {
@@ -86,26 +69,6 @@ trait Service extends HttpService with DB with Authenticator {
                 <h1>Say hello to <i>Bokbytarappen's server</i>!</h1>
               </body>
             </html>
-          }
-        }
-      }
-    } ~
-    path("special") {
-      get {
-        validate(1 > 2, "1 must be greater than 2") {
-          complete {
-            throw SuperSpecialException
-          }
-        }
-      }
-    } ~
-    path("custom-error" / Rest) { password =>
-      get {
-        respondWithMediaType(`application/json`) {
-          validate(password == "hello", BadPassword) {
-            complete {
-              "Validated"
-            }
           }
         }
       }
@@ -136,11 +99,15 @@ trait Service extends HttpService with DB with Authenticator {
       path("register") {
         formFields('email, 'name, 'phone ?, 'university, 'password) { (email, name, phone, university, password) =>
           respondWithMediaType(`text/plain`) {
-            complete {
-              query {
-                val passwordHash = BCrypt.hashpw(password, BCrypt.gensalt())
-                DBManager.insertProfile(email, passwordHash, name, phone, university)
-                "Successfully registered " + email
+            (validate(EmailValidator.isValid(email), InvalidEmail) & 
+             validate(EmailValidator.isAvailable(email), UnavailableEmail) &
+             validate(PasswordValidator.threshold(password), BadPassword)) {
+              complete {
+                query {
+                  val passwordHash = BCrypt.hashpw(password, BCrypt.gensalt())
+                  DBManager.insertProfile(email, passwordHash, name, phone, university)
+                  "Successfully registered " + email
+                }
               }
             }
           }
@@ -150,7 +117,7 @@ trait Service extends HttpService with DB with Authenticator {
        * Unregister the user
        */
       path("unregister") {
-        (authenticate(new BasicTokenAuthenticator("Unregistration", tokenAuthenticator)) | authenticate(new BasicHttpAuthenticator("Unregistration", passwordAuthenticator))) { case (user, session) =>
+        (authWithToken | authWithPass) { case (user, session) =>
           formField('name) { name =>
             respondWithMediaType(`application/json`) {
               complete {
@@ -172,7 +139,7 @@ trait Service extends HttpService with DB with Authenticator {
        * Verifies a password and returns an authentication token.
        */
       path("login") {
-        authenticate(new BasicHttpAuthenticator("Login", passwordAuthenticator)) { case (user, session) =>
+        authWithPass { case (user, session) =>
           respondWithMediaType(`application/json`) {
             complete {
               implicit val SessMessFormat = jsonFormat2(SessMess[String])
@@ -185,22 +152,23 @@ trait Service extends HttpService with DB with Authenticator {
        * Allows the user to change password
        */
       path("change-password") {
-        authenticate(new BasicHttpAuthenticator("Change password", passwordAuthenticator)) { case (user, session) =>
+        authWithPass { case (user, session) =>
           formField('password) { password =>
-            respondWithMediaType(`application/json`) {
-              complete {
-                query {
-                  lazy val passwordHash = BCrypt.hashpw(password, BCrypt.gensalt())
-                  lazy val old = Query(Profiles).filter(_.id === user.id)
-                  old.update(Profile(user.id, user.email, passwordHash, user.name, user.phoneNumber, user.university))
-                  implicit val SessMessFormat = jsonFormat2(SessMess[String])
-                  SessMess(None, "Password successfully changed")
+            validate(PasswordValidator.threshold(password), BadPassword) {
+              respondWithMediaType(`application/json`) {
+                complete {
+                  query {
+                    lazy val passwordHash = BCrypt.hashpw(password, BCrypt.gensalt())
+                    lazy val old = Query(Profiles).filter(_.id === user.id)
+                    old.update(Profile(user.id, user.email, passwordHash, user.name, user.phoneNumber, user.university))
+                    implicit val SessMessFormat = jsonFormat2(SessMess[String])
+                    SessMess(None, "Password successfully changed")
+                  }
                 }
               }
             }
           }
         }
       }
-      
     }
 }

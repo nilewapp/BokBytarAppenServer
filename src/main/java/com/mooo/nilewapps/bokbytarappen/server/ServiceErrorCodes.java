@@ -1,4 +1,4 @@
-/*
+/**
  *  Copyright 2013 Robert Welin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,6 +19,21 @@ package com.mooo.nilewapps.bokbytarappen.server;
  * Defines error codes for the web service.
  */
 class ServiceErrorCodes {
-  public static final int BAD_PASSWORD      = 1;
+
+  /**
+   * Returned when the user tries to register a password, but
+   * it has too low guessing entropy.
+   */
+  public static final int BAD_PASSWORD = 1;
+
+  /**
+   * Returned when the user tries to register an email address, but
+   * another user has already registered the address.
+   */
   public static final int UNAVAILABLE_EMAIL = 2;
+
+  /**
+   * Returned when the user tries to register an invalid email address.
+   */
+  public static final int INVALID_EMAIL = 3;
 }
