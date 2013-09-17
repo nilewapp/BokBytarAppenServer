@@ -25,7 +25,9 @@ libraryDependencies ++= Seq(
   "org.slf4j"           %   "slf4j-nop"     % "1.6.4",
   "com.h2database"      %   "h2"            % "1.3.170",
   // config
-  "com.typesafe"        %   "config"        % "1.0.2"
+  "com.typesafe"        %   "config"        % "1.0.2",
+  // email
+  "com.sun.mail"        %   "javax.mail"    % "1.5.0"
 )
 
 seq(Revolver.settings: _*)

@@ -37,8 +37,6 @@ import ServiceErrors._
 
 import scala.language.postfixOps
 
-object SuperSpecialException extends Exception
-
 /**
  * Actor that runs the service
  */
