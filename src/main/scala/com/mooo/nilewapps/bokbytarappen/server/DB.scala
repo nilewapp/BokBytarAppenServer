@@ -46,6 +46,11 @@ trait DB {
     tokenHash: String,
     expirationTime: Long)
 
+  case class PasswordResetToken(
+    id: Int,
+    token: String,
+    expirationTime: Long)
+
   /**
    * Tables
    */
@@ -126,6 +131,15 @@ trait DB {
     def membersPK = primaryKey("MEMBERS_PK", *)
     def groupFK = foreignKey("MEMBERS_GROUP_FK", group, Groups)(_.id)
     def profileFK = foreignKey("MEMBERS_PROFILE_FK", profile, Profiles)(_.id)
+  }
+
+  object PasswordResetTokens extends Table[PasswordResetToken]("PASSWORD_RESET_TOKENS") {
+    def id = column[Int]("ID")
+    def token = column[String]("TOKEN")
+    def expirationTime = column[Long]("EXPIRATION_TIME")
+    def * = id ~ token ~ expirationTime <> (PasswordResetToken, PasswordResetToken.unapply _)
+    def passwordResetTokensPK = primaryKey("PASSWORD_RESET_TOKENS_PK", id ~ token)
+    def profileFK = foreignKey("PASSWORD_RESET_TOKENS_PROFILE_FK", id, Profiles)(_.id)
   }
 
   def query[T](f: => T): T = db withSession f

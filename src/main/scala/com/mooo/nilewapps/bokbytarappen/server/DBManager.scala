@@ -29,7 +29,10 @@ object DBManager extends DB {
     Profiles.ddl ++ 
     WantedBooks.ddl ++ 
     OwnedBooks.ddl ++
-    Sessions.ddl
+    Sessions.ddl ++
+    Groups.ddl ++
+    Members.ddl ++
+    PasswordResetTokens.ddl
 
   def dropAll = query {
     all.drop

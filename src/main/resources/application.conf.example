@@ -8,6 +8,7 @@ spray.can.server {
 }
 
 http-server {
+  domain = "https://localhost:"${http-server.port}
   interface = localhost
   port = 8443
 }
@@ -34,4 +35,8 @@ mail {
   startttls-enable = true
   smtp-host = "smtp.gmail.com"
   port = 587
+}
+
+password-reset {
+  expiration-time = 1 d
 }

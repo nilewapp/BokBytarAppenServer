@@ -15,15 +15,18 @@
  */
 package com.mooo.nilewapps.bokbytarappen.server
 
+import javax.net.ssl.SSLException
+
 import scala.concurrent.duration._
 import akka.actor.Actor
 
+import spray.util.LoggingContext
 import spray.routing._
 import spray.routing.authentication._
 import spray.http._
+import spray.http.StatusCodes._
 import spray.httpx.marshalling._
 import spray.httpx.SprayJsonSupport
-import spray.util.LoggingContext
 
 import spray.json.DefaultJsonProtocol
 import SprayJsonSupport._
@@ -36,6 +39,8 @@ import TokenJsonProtocol._
 import ServiceErrors._
 
 import scala.language.postfixOps
+
+import com.typesafe.config._
 
 /**
  * Actor that runs the service
@@ -55,11 +60,13 @@ trait Service extends HttpService with DB with Authenticator {
 
   def authWithPass = authenticate(new BasicHttpAuthenticator("Protected", passwordAuthenticator))
 
-  def authWithToken = authenticate(new BasicTokenAuthenticator("Protected", tokenAuthenticator))
+  def authWithToken = authenticate(new TokenAuthenticator("Protected", tokenAuthenticator))
+
+  implicit val SessMessStringFormat = jsonFormat2(SessMess[String])
 
   val routes =
-    path("") {
-      get {
+    get {
+      path("") {
         respondWithMediaType(`text/html`) {
           complete {
             <html>
@@ -69,13 +76,11 @@ trait Service extends HttpService with DB with Authenticator {
             </html>
           }
         }
-      }
-    } ~
-    /**
-     * Returns json array of all universities in a given country.
-     */
-    path("universities" / IntNumber) { countryCode =>
-      get {
+      } ~
+      /**
+       * Returns json array of all universities in a given country.
+       */
+      path("universities" / IntNumber) { countryCode =>
         respondWithMediaType(`application/json`) {
           complete {
             query {
@@ -88,11 +93,22 @@ trait Service extends HttpService with DB with Authenticator {
             }
           }
         }
+      } ~
+      path("reset-password" / Rest) { token =>
+        respondWithMediaType(`text/html`) {
+          complete {
+            <html>
+              <body>
+                <h1>New password placeholder.</h1>
+              </body>
+            </html>
+          }
+        }
       }
     } ~
     post {
       /**
-       * Registers the user
+       * Registers the user.
        */
       path("register") {
         formFields('email, 'name, 'phone ?, 'university, 'password) { (email, name, phone, university, password) =>
@@ -112,7 +128,7 @@ trait Service extends HttpService with DB with Authenticator {
         }
       } ~
       /**
-       * Unregister the user
+       * Unregister the user.
        */
       path("unregister") {
         (authWithToken | authWithPass) { case (user, session) =>
@@ -140,14 +156,13 @@ trait Service extends HttpService with DB with Authenticator {
         authWithPass { case (user, session) =>
           respondWithMediaType(`application/json`) {
             complete {
-              implicit val SessMessFormat = jsonFormat2(SessMess[String])
               SessMess(Some(session), "")
             }
           }
         }
       } ~
       /**
-       * Allows the user to change password
+       * Allows the user to change password.
        */
       path("change-password") {
         authWithPass { case (user, session) =>
@@ -159,11 +174,23 @@ trait Service extends HttpService with DB with Authenticator {
                     lazy val passwordHash = BCrypt.hashpw(password, BCrypt.gensalt())
                     lazy val old = Query(Profiles).filter(_.id === user.id)
                     old.update(Profile(user.id, user.email, passwordHash, user.name, user.phoneNumber, user.university))
-                    implicit val SessMessFormat = jsonFormat2(SessMess[String])
                     SessMess(None, "Password successfully changed")
                   }
                 }
               }
+            }
+          }
+        }
+      } ~
+      /**
+       * Sends a password reset link to a given email address.
+       */
+      path("lost-password") {
+        formField('email) { email =>
+          complete {
+            query {
+              LostPasswordManager.sendResetLink(email)
+              SessMess(None, "A reset link has been sent to \'" + email + "\'.")
             }
           }
         }

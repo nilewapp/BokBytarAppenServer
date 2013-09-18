@@ -26,17 +26,17 @@ import unmarshalling._
 /**
  * Defines the Token and the TokenAuthenticator types
  */
-object BasicTokenAuthenticator {
+object TokenAuthenticator {
   type TokenAuthenticator[U] = Option[Token] => Future[Option[U]]
 }
 
-import BasicTokenAuthenticator._
+import TokenAuthenticator._
 
 /**
  * Defines fuctions to extract a Token from an `Authorization` header with
- * the format `Nilewapp key="value",...` to a Map
+ * the format `Nilewapp key="value",...` to a Map.
  */
-class BasicTokenAuthenticator[U](val realm: String, val authenticator: TokenAuthenticator[U])(implicit val executionContext: ExecutionContext)
+class TokenAuthenticator[U](val realm: String, val authenticator: Option[Token] => Future[Option[U]])(implicit val executionContext: ExecutionContext)
     extends ContextAuthenticator[U] {
       
   def apply(ctx: RequestContext) = {

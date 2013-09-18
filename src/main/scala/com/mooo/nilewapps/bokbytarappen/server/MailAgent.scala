@@ -28,9 +28,9 @@ import com.typesafe.config._
 object MailAgent {
 
   /**
-   * Sends an email to a given user with a given subject and
-   * content text. Uses application configuration to find sender
-   * credentials and smtp options.
+   * Sends an email to a given user with a given subject and content text 
+   * using TLS. Uses application configuration to find sender credentials
+   * and smtp options.
    */
   def send(to: String, subject: String, content: String) {
 

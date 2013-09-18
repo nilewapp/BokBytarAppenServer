@@ -19,15 +19,8 @@ import scala.concurrent._
 import ExecutionContext.Implicits.global
 import spray.routing.authentication.UserPass
 
-import java.security.SecureRandom
-import java.security.MessageDigest
-import java.math.BigInteger
-import sun.misc.BASE64Encoder
-
 import scala.slick.driver.H2Driver.simple._
 import Database.threadLocalSession
-
-import BasicTokenAuthenticator._
 
 import com.typesafe.config._
 
@@ -39,11 +32,6 @@ trait Authenticator extends DB {
   lazy val expirationTime = ConfigFactory.load().getMilliseconds("session.expiration-time")
 
   /**
-   * Used for hashing authentication tokens before storing them in the database.
-   */
-  lazy val sha256 = MessageDigest.getInstance("SHA-256")
-
-  /**
    * Takes a user/pass-pair, check their validity and returns the profile of the user and a new Session.
    */
   def passwordAuthenticator(credentials: Option[UserPass]): Future[Option[(Profile, Token)]] = future {
@@ -53,10 +41,10 @@ trait Authenticator extends DB {
           Query(Profiles).filter(_.email === c.user).list.headOption match {
             case Some(profile) =>
               if (BCrypt.checkpw(c.pass, profile.passwordHash)) {
-                lazy val series = generateSecureString()
-                lazy val token = generateSecureString()
+                lazy val series = SecureString()
+                lazy val token = SecureString()
                 lazy val time = System.currentTimeMillis() + expirationTime
-                if (Sessions.insert(Session(profile.id, hash(series), hash(token), time)) == 1)
+                if (Sessions.insert(Session(profile.id, SHA256(series), SHA256(token), time)) == 1)
                   Some(profile, Token(profile.email, series, token, Some(time)))
                 else 
                   None
@@ -77,38 +65,24 @@ trait Authenticator extends DB {
       case Some(t) => query { 
         Query(Profiles).filter(_.email === t.email).list.headOption match {
           case Some(profile) =>
-            lazy val token = generateSecureString()
-            lazy val time = System.currentTimeMillis()
-            lazy val expires = time + expirationTime
-            lazy val seriesHash = hash(t.series)
+            lazy val token = SecureString()
+            lazy val currentTime = System.currentTimeMillis()
+            lazy val expires = currentTime + expirationTime
+            lazy val seriesHash = SHA256(t.series)
             (for {
               s <- Sessions 
               if s.id        === profile.id    &&
                  s.series    === seriesHash    &&
-                 s.tokenHash === hash(t.token) &&
-                 s.expirationTime > System.currentTimeMillis()
-            } yield s).update(Session(profile.id, seriesHash,  hash(token), expires)) match {
-              case 1 => 
-                println("Generated token: " + Token(t.email, t.series, token, Some(expires)))
-                Some(profile, Token(t.email, t.series, token, Some(expires)))
-              case 0 => 
-                println("Failed to generate new token")
-                None
+                 s.tokenHash === SHA256(t.token) &&
+                 s.expirationTime > currentTime
+            } yield s).update(Session(profile.id, seriesHash, SHA256(token), expires)) match {
+              case 1 => Some(profile, Token(t.email, t.series, token, Some(expires)))
+              case 0 => None
             }
           case _ => None
         }
       }
-      case _ => println("No token"); None
+      case _ => None
     }
   }
-
-  def generateSecureString() = {
-    val sr = new SecureRandom
-    val token = new BigInteger(130, sr).toString(64).getBytes
-    new String(new BASE64Encoder().encode(token))
-  }
-
-  def hash(s: String) =
-    new String(sha256.digest(s.getBytes))
-
 }
