@@ -46,7 +46,7 @@ in any web browser.
 
 5. Copy the generated file `keystore.jks` to `/src/main/resources/` or the location of your choice
 
-6. Update `application.conf` to contain correct path to `keystore.jks` and the password that you choose for it
+6. Update `application.conf` to contain correct path to `keystore.jks` and the password that you choose for it (Note: if you copied the keystore into `/src/main/resources/` the default path is correct)
 
         ...
         truststore {

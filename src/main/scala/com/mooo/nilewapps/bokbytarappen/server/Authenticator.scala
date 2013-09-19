@@ -15,7 +15,7 @@
  */
 package com.mooo.nilewapps.bokbytarappen.server
 
-import scala.concurrent._ 
+import scala.concurrent._
 import ExecutionContext.Implicits.global
 import spray.routing.authentication.UserPass
 
@@ -32,24 +32,31 @@ trait Authenticator extends DB {
   lazy val expirationTime = ConfigFactory.load().getMilliseconds("session.expiration-time")
 
   /**
-   * Takes a user/pass-pair, check their validity and returns the profile of the user and a new Session.
+   * Create a new session, add it to the database and return the
+   * profile and the authentication token.
    */
-  def passwordAuthenticator(credentials: Option[UserPass]): Future[Option[(Profile, Token)]] = future {
+  def newSession(profile: Profile) = {
+    lazy val series = SecureString()
+    lazy val token = SecureString()
+    lazy val time = System.currentTimeMillis() + expirationTime
+    if (Sessions.insert(Session(profile.id, SHA256(series), SHA256(token), time)) == 1) {
+      Some(profile, Token(profile.email, series, token, Some(time)))
+    } else None
+  }
+
+  /**
+   * Authenticate a user with password and execute a method on the profile.
+   */
+  def passwordAuthenticator[U](
+      credentials: Option[UserPass],
+      f: Profile => Option[U]): Future[Option[U]] = future {
     credentials match {
       case Some(c) =>
-        query { 
+        query {
           Query(Profiles).filter(_.email === c.user).list.headOption match {
             case Some(profile) =>
-              if (BCrypt.checkpw(c.pass, profile.passwordHash)) {
-                lazy val series = SecureString()
-                lazy val token = SecureString()
-                lazy val time = System.currentTimeMillis() + expirationTime
-                if (Sessions.insert(Session(profile.id, SHA256(series), SHA256(token), time)) == 1)
-                  Some(profile, Token(profile.email, series, token, Some(time)))
-                else 
-                  None
-              } else 
-                None
+              if (BCrypt.checkpw(c.pass, profile.passwordHash)) f(profile)
+              else None
             case _ => None
           }
         }
@@ -58,11 +65,25 @@ trait Authenticator extends DB {
   }
 
   /**
+   * Takes a user/pass-pair, checks their validity and returns the
+   * profile of the user and a new Session.
+   */
+  def passwordAuthenticator(credentials: Option[UserPass]): Future[Option[(Profile, Token)]] =
+    passwordAuthenticator(credentials, newSession)
+
+  /**
+   * Takes a user/pass-pair, checks their validity and returns the
+   * profile of the user without creating a new Session.
+   */
+  def passwordAuthenticatorNoSession(credentials: Option[UserPass]): Future[Option[Profile]] =
+    passwordAuthenticator(credentials, Some(_))
+
+  /**
    * Takes a token, checks its validity, returns the profile the token belongs to and a new Session.
    */
   def tokenAuthenticator(credentials: Option[Token]): Future[Option[(Profile, Token)]] = future {
     credentials match {
-      case Some(t) => query { 
+      case Some(t) => query {
         Query(Profiles).filter(_.email === t.email).list.headOption match {
           case Some(profile) =>
             lazy val token = SecureString()
@@ -70,9 +91,9 @@ trait Authenticator extends DB {
             lazy val expires = currentTime + expirationTime
             lazy val seriesHash = SHA256(t.series)
             (for {
-              s <- Sessions 
-              if s.id        === profile.id    &&
-                 s.series    === seriesHash    &&
+              s <- Sessions
+              if s.id        === profile.id      &&
+                 s.series    === seriesHash      &&
                  s.tokenHash === SHA256(t.token) &&
                  s.expirationTime > currentTime
             } yield s).update(Session(profile.id, seriesHash, SHA256(token), expires)) match {
@@ -81,6 +102,51 @@ trait Authenticator extends DB {
             }
           case _ => None
         }
+      }
+      case _ => None
+    }
+  }
+
+  /**
+   * Takes a token, checks its validity, deletes the token and returns
+   * the profile the token belongs to.
+   */
+  def tokenAuthenticatorNoSession(credentials: Option[Token]): Future[Option[Profile]] = future {
+    credentials match {
+      case Some(t) => query {
+        Query(Profiles).filter(_.email === t.email).list.headOption match {
+          case Some(profile) =>
+            (for {
+              s <- Sessions
+              if s.id        === profile.id       &&
+                 s.series    === SHA256(t.series) &&
+                 s.tokenHash === SHA256(t.token)  &&
+                 s.expirationTime > System.currentTimeMillis()
+            } yield s).delete match {
+              case 1 => Some(profile)
+              case 0 => None
+            }
+          case _ => None
+        }
+      }
+      case _ => None
+    }
+  }
+
+
+  /**
+   * Takes a password reset token and returns the profile it belongs to if it is valid.
+   */
+  def passwordResetTokenAuthenticator(token: Option[String]): Future[Option[Profile]] = future {
+    token match {
+      case Some(t) => query {
+        (for {
+          prt <- PasswordResetTokens
+          profile <- Profiles
+          if prt.token === SHA256(t)  &&
+             prt.id    === profile.id &&
+             prt.expirationTime > System.currentTimeMillis()
+        } yield profile).list.headOption
       }
       case _ => None
     }

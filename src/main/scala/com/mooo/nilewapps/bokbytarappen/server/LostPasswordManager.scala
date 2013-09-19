@@ -21,7 +21,7 @@ import Database.threadLocalSession
 import com.typesafe.config._
 
 object LostPasswordManager extends DB {
-  
+
   /**
    * Creates a password reset token and stores it in the database if
    * the given email address is registered.
@@ -32,7 +32,7 @@ object LostPasswordManager extends DB {
 
     query {
       Query(Profiles).filter(_.email === email).list.headOption match {
-        case Some(profile) => 
+        case Some(profile) =>
           lazy val token = SecureString()
           lazy val expires = System.currentTimeMillis() + expirationTime
           PasswordResetTokens.insert(PasswordResetToken(profile.id, SHA256(token), expires)) match {
@@ -45,18 +45,16 @@ object LostPasswordManager extends DB {
   }
 
   /**
-   * Creates a password reset token and sends a reset link to the given 
+   * Creates a password reset token and sends a reset link to the given
    * email address if it is registered in the database.
    */
-  def sendResetLink(email: String) {
-    LostPasswordManager.requestResetToken(email) match {
-      case Some(token) => MailAgent.send(
-        email, 
-        "Password reset link",
-        "Hello,\n\nTo reset your password, please click the link below:\n\n    " +
-        ConfigFactory.load().getString("http-server.domain") +
-        "/reset-password/" + token + "\n\nMany thanks,\nRobert")
-      case _ =>
-    }
+  def sendResetLink(email: String) = LostPasswordManager.requestResetToken(email) match {
+    case Some(token) => MailAgent.send(
+      email,
+      "Password reset link",
+      "Hello,\n\nTo reset your password, please click the link below:\n\n" +
+      ConfigFactory.load().getString("http-server.domain") +
+      "/change-password/" + token + "\n\nMany thanks,\nRobert")
+    case _ =>
   }
 }

@@ -24,6 +24,10 @@ class ServiceSpec extends Specification with Specs2RouteTest with Service {
   def actorRefFactory = system
   
   "Service" should {
-
+    "return a greeting for GET requests to the root path" in {
+      Get() ~> routes ~> check {
+        entityAs[String] must contain("Say hello")
+      }
+    }
   }
 }

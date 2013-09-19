@@ -2,17 +2,13 @@
 
 ### Password strength
 
-Any password that is stored in the database needs to be of sufficient
-entropy. The password therefore needs to be validated before it is stored.
+The strength of a password is now checked before it is stored, however
+the method is somewhat crude (essentially scaled Shannon entropy). This
+should be improved.
 
-### Forgot password
+### Regular clean-up
 
-The user should be able to retrieve access to an account if he has forgotten
-his password but remembers his registered email address. When such a request
-is received, the server should email the user a link to a page that lets the
-user choose a new password. This link should contain a large access token
-that is valid for a short period of time. Only a hashed and salted (using
-BCrypt) version of the token should be stored on the server.
+Temporary data such as sessions should be regularly deleted from the database.
 
 ### Session storage
 

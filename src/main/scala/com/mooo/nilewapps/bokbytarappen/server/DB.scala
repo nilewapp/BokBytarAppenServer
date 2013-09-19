@@ -20,6 +20,25 @@ import Database.threadLocalSession
 
 import com.typesafe.config._
 
+case class Profile(
+  id: Int,
+  email: String,
+  passwordHash: String,
+  name: String,
+  phoneNumber: Option[String],
+  university: String)
+
+case class Session(
+  id: Int,
+  series: String,
+  tokenHash: String,
+  expirationTime: Long)
+
+case class PasswordResetToken(
+  id: Int,
+  token: String,
+  expirationTime: Long)
+
 /**
  * Defines tables and provides database access
  */
@@ -28,28 +47,9 @@ trait DB {
   val config = ConfigFactory.load().getConfig("db")
 
   val DBName = config.getString("name")
-  lazy val url = "jdbc:h2:" + getClass.getResource("/").getPath() + DBName + 
+  lazy val url = "jdbc:h2:" + getClass.getResource("/").getPath() + DBName +
     ";USER=" + config.getString("user") + ";PASSWORD=" + config.getString("pass")
   lazy val db = Database.forURL(url, driver = "org.h2.Driver")
-
-  case class Profile(
-    id: Int, 
-    email: String,
-    passwordHash: String,
-    name: String,
-    phoneNumber: Option[String],
-    university: String)
-
-  case class Session(
-    id: Int,
-    series: String,
-    tokenHash: String,
-    expirationTime: Long)
-
-  case class PasswordResetToken(
-    id: Int,
-    token: String,
-    expirationTime: Long)
 
   /**
    * Tables

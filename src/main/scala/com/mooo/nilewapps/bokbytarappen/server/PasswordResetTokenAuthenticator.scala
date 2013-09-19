@@ -19,14 +19,12 @@ import scala.concurrent.{ExecutionContext, Future}
 import spray._
 import routing._
 import authentication._
+import http._
+import httpx.unmarshalling._
 
-/**
- * Defines fuctions to extract a Token from an `Authorization` header with
- * the format `Nilewapp key="value",...` to a Map.
- */
-class TokenAuthenticator[U](
+class PasswordResetTokenAuthenticator[U](
     val realm: String,
-    val authenticator: Option[Token] => Future[Option[U]])
+    val authenticator: Option[String] => Future[Option[U]])
     (implicit val executionContext: ExecutionContext)
   extends ContextAuthenticator[U] {
 
@@ -39,37 +37,16 @@ class TokenAuthenticator[U](
     }
   }
 
-  def scheme = "Nilewapp "
-
-  def params(ctx: RequestContext): Map[String, String] = Map.empty
-
   /**
-   * Extracts the token from the Authorization header and passes it as
-   * the argument to the authenticator.
+   * Extracts a password reset token from the request entity and
+   * passes it to the authenticator.
    */
   def authenticate(ctx: RequestContext) = {
     authenticator {
-      ctx.request.headers.find(_.name == "Authorization") match {
-        case Some(head) =>
-          if (head.value.startsWith(scheme)) {
-            TokenFactory(asMap(head.value.replaceFirst(scheme, "")))
-          } else None
+      ctx.request.entity.as[FormData] match {
+        case Right(m) => m.fields.get("token")
         case _ => None
       }
     }
   }
-
-  /**
-   * Decodes the token in the Authorization header.
-   */
-  def asMap(s: String) = {
-    lazy val de = new sun.misc.BASE64Decoder()
-    s.split(",").map {
-      a => a.split("=") match {
-        case Array(key, value @ _*) =>
-          (key, new String(de.decodeBuffer(value.mkString("=").replaceAll("\"", ""))))
-      }
-    }.toMap
-  }
 }
-

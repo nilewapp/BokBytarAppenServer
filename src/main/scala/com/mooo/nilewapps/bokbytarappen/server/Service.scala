@@ -43,7 +43,7 @@ import scala.language.postfixOps
 import com.typesafe.config._
 
 /**
- * Actor that runs the service
+ * Actor that runs the service.
  */
 class ServiceActor extends Actor with Service {
 
@@ -54,13 +54,24 @@ class ServiceActor extends Actor with Service {
 }
 
 /**
- * Provides all functionality of the server
+ * Provides all functionality of the server.
  */
 trait Service extends HttpService with DB with Authenticator {
 
+  def domain = ConfigFactory.load().getString("http-server.domain")
+
   def authWithPass = authenticate(new BasicHttpAuthenticator("Protected", passwordAuthenticator))
 
+  def authWithPassNoSession =
+    authenticate(new BasicHttpAuthenticator("Protected", passwordAuthenticatorNoSession))
+
   def authWithToken = authenticate(new TokenAuthenticator("Protected", tokenAuthenticator))
+
+  def authWithTokenNoSession =
+    authenticate(new TokenAuthenticator("Protected", tokenAuthenticatorNoSession))
+
+  def authWithPasswordResetToken =
+    authenticate(new PasswordResetTokenAuthenticator("Password reset", passwordResetTokenAuthenticator))
 
   implicit val SessMessStringFormat = jsonFormat2(SessMess[String])
 
@@ -94,12 +105,20 @@ trait Service extends HttpService with DB with Authenticator {
           }
         }
       } ~
-      path("reset-password" / Rest) { token =>
+      /**
+       * Resonds with password reset form.
+       */
+      path("change-password" / Rest) { token =>
         respondWithMediaType(`text/html`) {
           complete {
             <html>
               <body>
                 <h1>New password placeholder.</h1>
+                <form name="password-reset-form" action={domain + "/change-password"} method="POST">
+                  <input type="password" size="25" name="password" />
+                  <input type="hidden" name="token" value={token} />
+                  <input type="submit" value="Submit" />
+                </form>
               </body>
             </html>
           }
@@ -113,15 +132,13 @@ trait Service extends HttpService with DB with Authenticator {
       path("register") {
         formFields('email, 'name, 'phone ?, 'university, 'password) { (email, name, phone, university, password) =>
           respondWithMediaType(`text/plain`) {
-            (validate(EmailValidator.isValid(email), InvalidEmail) & 
+            (validate(EmailValidator.isValid(email), InvalidEmail) &
              validate(EmailValidator.isAvailable(email), UnavailableEmail) &
              validate(PasswordValidator.threshold(password), BadPassword)) {
               complete {
-                query {
-                  val passwordHash = BCrypt.hashpw(password, BCrypt.gensalt())
-                  DBManager.insertProfile(email, passwordHash, name, phone, university)
-                  "Successfully registered " + email
-                }
+                val passwordHash = BCrypt.hashpw(password, BCrypt.gensalt())
+                DBManager.insertProfile(email, passwordHash, name, phone, university)
+                "Successfully registered " + email
               }
             }
           }
@@ -162,21 +179,17 @@ trait Service extends HttpService with DB with Authenticator {
         }
       } ~
       /**
-       * Allows the user to change password.
+       * Allows the user to change password either with normal user/pass
+       * authentication or by providing a password reset token obtained from
+       * a password reset email.
        */
       path("change-password") {
-        authWithPass { case (user, session) =>
+        (authWithPassNoSession | authWithPasswordResetToken) { case user =>
           formField('password) { password =>
             validate(PasswordValidator.threshold(password), BadPassword) {
-              respondWithMediaType(`application/json`) {
-                complete {
-                  query {
-                    lazy val passwordHash = BCrypt.hashpw(password, BCrypt.gensalt())
-                    lazy val old = Query(Profiles).filter(_.id === user.id)
-                    old.update(Profile(user.id, user.email, passwordHash, user.name, user.phoneNumber, user.university))
-                    SessMess(None, "Password successfully changed")
-                  }
-                }
+              complete {
+                DBManager.updatePassword(user, password)
+                SessMess(None, "Password successfully changed!")
               }
             }
           }
@@ -188,10 +201,19 @@ trait Service extends HttpService with DB with Authenticator {
       path("lost-password") {
         formField('email) { email =>
           complete {
-            query {
-              LostPasswordManager.sendResetLink(email)
-              SessMess(None, "A reset link has been sent to \'" + email + "\'.")
-            }
+            LostPasswordManager.sendResetLink(email)
+            SessMess(None, "A reset link has been sent to \'" + email + "\'.")
+          }
+        }
+      } ~
+      /**
+       * Deletes all session data that belongs to a user.
+       */
+      path("delete-session-data") {
+        (authWithTokenNoSession | authWithPassNoSession) { case user =>
+          complete {
+            DBManager.deleteSessionData(user.id)
+            SessMess(None, "Your session data has been deleted!")
           }
         }
       }

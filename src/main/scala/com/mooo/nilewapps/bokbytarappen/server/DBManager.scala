@@ -23,11 +23,11 @@ import Database.threadLocalSession
  */
 object DBManager extends DB {
 
-  def all = Countries.ddl ++ 
-    Cities.ddl ++ 
-    Universities.ddl ++ 
-    Profiles.ddl ++ 
-    WantedBooks.ddl ++ 
+  def all = Countries.ddl ++
+    Cities.ddl ++
+    Universities.ddl ++
+    Profiles.ddl ++
+    WantedBooks.ddl ++
     OwnedBooks.ddl ++
     Sessions.ddl ++
     Groups.ddl ++
@@ -40,7 +40,7 @@ object DBManager extends DB {
 
   def insertProfile(email: String, passwordHash: String, name: String, phoneNumber: Option[String], university: String) {
     query {
-      (Profiles.email ~ 
+      (Profiles.email ~
        Profiles.passwordHash ~
        Profiles.name ~
        Profiles.phoneNumber ~
@@ -49,9 +49,31 @@ object DBManager extends DB {
     }
   }
 
-  def init = query { 
+  /**
+   * Delete all session data for a specific user.
+   */
+  def deleteSessionData(id: Int) = {
+    query {
+      Query(Sessions).filter(_.id === id).delete
+      Query(PasswordResetTokens).filter(_.id === id).delete
+    }
+  }
+
+  /**
+   * Delete all session data of a specific user and update its password.
+   */
+  def updatePassword(user: Profile, password: String) = {
+    deleteSessionData(user.id)
+    query {
+      lazy val passwordHash = BCrypt.hashpw(password, BCrypt.gensalt())
+      lazy val old = Query(Profiles).filter(_.id === user.id)
+      old.update(Profile(user.id, user.email, passwordHash, user.name, user.phoneNumber, user.university))
+    }
+  }
+
+  def init = query {
     all.create
-    
+
     Countries.insertAll(
       (752, "SE")
     , (826, "GB"))
