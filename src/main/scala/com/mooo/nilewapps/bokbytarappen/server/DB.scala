@@ -20,30 +20,6 @@ import Database.threadLocalSession
 
 import com.typesafe.config._
 
-case class Profile(
-  id: Int,
-  email: Option[String],
-  passwordHash: String,
-  name: String,
-  phoneNumber: Option[String],
-  university: String)
-
-case class Session(
-  id: Int,
-  series: String,
-  tokenHash: String,
-  expirationTime: Long)
-
-case class SimpleToken(
-  id: Int,
-  token: String,
-  expirationTime: Long)
-
-case class EmailConfirmationToken(
-  id: Int,
-  token: String,
-  email: String)
-
 /**
  * Defines tables and provides database access
  */
@@ -80,14 +56,14 @@ object DB {
     def cityFK = foreignKey("CITY_FK", city, Cities)(_.name)
   }
 
-  object Profiles extends Table[Profile]("PROFILES") {
+  object Profiles extends Table[data.Profile]("PROFILES") {
     def id = column[Int]("ID", O.AutoInc, O.PrimaryKey)
     def email = column[Option[String]]("EMAIL")
     def passwordHash = column[String]("PASSWORD_HASH")
     def name = column[String]("NAME")
     def phoneNumber = column[Option[String]]("PHONE_NUMBER")
     def university = column[String]("UNIVERSITY")
-    def * = id ~ email ~ passwordHash ~ name ~ phoneNumber ~ university <> (Profile, Profile.unapply _)
+    def * = id ~ email ~ passwordHash ~ name ~ phoneNumber ~ university <> (data.Profile, data.Profile.unapply _)
     def emailIndex = index("PROFILES_EMAIL_INDEX", email, unique = true)
     def universityFK = foreignKey("UNIVERSITY_FK", university, Universities)(_.name)
   }
@@ -108,25 +84,25 @@ object DB {
     def profileFK = foreignKey("OWNED_PROFILE_FK", profileId, Profiles)(_.id)
   }
 
-  object Sessions extends Table[Session]("SESSION") {
+  object Sessions extends Table[data.Session]("SESSION") {
     def id = column[Int]("PROFILE")
     def series = column[String]("SERIES")
     def tokenHash = column[String]("TOKEN")
     def expirationTime = column[Long]("EXPIRATION_TIME")
-    def * = id ~ series ~ tokenHash ~ expirationTime <> (Session, Session.unapply _)
+    def * = id ~ series ~ tokenHash ~ expirationTime <> (data.Session, data.Session.unapply _)
     def sessionPK = primaryKey("SESSION_PK", id ~ series)
     def profileFK = foreignKey("SESSION_PROFILE_FK", id, Profiles)(_.id)
   }
 
-  import GroupPrivacy._
-  object Groups extends Table[Group]("GROUPS") {
+  import data.GroupPrivacy._
+  object Groups extends Table[data.Group]("GROUPS") {
     def id = column[Int]("ID", O.AutoInc, O.PrimaryKey)
     def name = column[String]("NAME")
     def owner = column[Int]("OWNER")
     def description = column[String]("DESCRIPTION")
-    def privacy = column[GroupPrivacy]("PRIVACY")
+    def privacy = column[data.GroupPrivacy]("PRIVACY")
     def parent = column[Option[Int]]("PARENT")
-    def * = id.? ~ name ~ owner ~ description ~ privacy ~ parent <> (Group, Group.unapply _)
+    def * = id.? ~ name ~ owner ~ description ~ privacy ~ parent <> (data.Group, data.Group.unapply _)
     def ownerFK = foreignKey("GROUPS_OWNER_FK", owner, Profiles)(_.id)
   }
 
@@ -139,20 +115,21 @@ object DB {
     def profileFK = foreignKey("MEMBERS_PROFILE_FK", profile, Profiles)(_.id)
   }
 
-  object PasswordResetTokens extends Table[SimpleToken]("PASSWORD_RESET_TOKENS") {
-    def id = column[Int]("ID")
+  object PasswordResetTokens extends Table[data.SimpleToken]("PASSWORD_RESET_TOKENS") {
+    def id = column[Int]("ID", O.PrimaryKey)
     def token = column[String]("TOKEN")
     def expirationTime = column[Long]("EXPIRATION_TIME")
-    def * = id ~ token ~ expirationTime <> (SimpleToken, SimpleToken.unapply _)
-    def passwordResetTokensPK = primaryKey("PASSWORD_RESET_TOKENS_PK", id ~ token)
+    def * = id ~ token ~ expirationTime <> (data.SimpleToken, data.SimpleToken.unapply _)
+    def tokenIndex = index("PASSWORD_RESET_TOKENS_TOKEN_INDEX", token, unique = true)
     def profileFK = foreignKey("PASSWORD_RESET_TOKENS_PROFILE_FK", id, Profiles)(_.id)
   }
 
-  object EmailConfirmationTokens extends Table[EmailConfirmationToken]("EMAIL_CONFIRMATION_TOKENS") {
+  object EmailConfirmationTokens extends Table[data.EmailConfirmationToken]("EMAIL_CONFIRMATION_TOKENS") {
     def id = column[Int]("ID", O.PrimaryKey)
     def token = column[String]("TOKEN")
     def email = column[String]("EMAIL")
-    def * = id ~ token ~ email <> (EmailConfirmationToken, EmailConfirmationToken.unapply _)
+    def * = id ~ token ~ email <> (data.EmailConfirmationToken, data.EmailConfirmationToken.unapply _)
+    def tokenIndex = index("EMAIL_CONFIRMATION_TOKENS_TOKEN_INDEX", token, unique = true)
     def profileFK = foreignKey("EMAIL_CONFIRMATION_TOKENS_PROFILE_FK", id, Profiles)(_.id)
   }
 
@@ -177,10 +154,13 @@ object DB {
     Query(PasswordResetTokens).filter(_.id === id).delete
   }
 
-  def updateEmail(user: Profile, email: Option[String]) = {
+  /**
+   * Deletes all session data and updates the email address of a given user.
+   */
+  def updateEmail(user: data.Profile, email: Option[String]) = {
     deleteSessionData(user.id)
     Query(Profiles).filter(_.id === user.id).update(
-      Profile(
+      data.Profile(
         user.id,
         email,
         user.passwordHash,
@@ -192,10 +172,10 @@ object DB {
   /**
    * Delete all session data of a specific user and update its password.
    */
-  def updatePassword(user: Profile, password: String) = {
+  def updatePassword(user: data.Profile, password: String) = {
     deleteSessionData(user.id)
     Query(Profiles).filter(_.id === user.id).update(
-      Profile(
+      data.Profile(
         user.id,
         user.email,
         BCrypt.hashpw(password, BCrypt.gensalt()),

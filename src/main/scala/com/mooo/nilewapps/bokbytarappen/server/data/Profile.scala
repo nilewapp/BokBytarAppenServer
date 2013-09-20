@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mooo.nilewapps.bokbytarappen.server
+package com.mooo.nilewapps.bokbytarappen.server.data
 
-import spray.json.DefaultJsonProtocol
-import DefaultJsonProtocol._
-
-object TokenJsonProtocol extends DefaultJsonProtocol {
-  implicit val TokenFormat = jsonFormat4(Token)
-}
+case class Profile(
+  id: Int,
+  email: Option[String],
+  passwordHash: String,
+  name: String,
+  phoneNumber: Option[String],
+  university: String)

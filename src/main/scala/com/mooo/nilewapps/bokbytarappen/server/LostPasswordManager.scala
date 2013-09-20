@@ -22,6 +22,8 @@ import com.typesafe.config._
 
 import DB._
 
+import data._
+
 object LostPasswordManager {
 
   /**

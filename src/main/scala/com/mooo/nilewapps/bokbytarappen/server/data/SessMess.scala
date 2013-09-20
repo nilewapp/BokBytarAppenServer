@@ -13,21 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mooo.nilewapps.bokbytarappen.server
+package com.mooo.nilewapps.bokbytarappen.server.data
 
-/**
- * Produces a Token from a Map.
- */
-object TokenFactory {
-
-  /**
-   * Produces an Option[Token] from a Map containing the keys "email", "series"
-   * and "token". If any of these keys don't exist None is returned.
-   */
-  def apply(vals: Map[String, String]): Option[Token] = 
-    try {
-      Some(Token(vals("email"), vals("series"), vals("token"), None))
-    } catch {
-      case e: NoSuchElementException => None
-    }
-}
+case class SessMess[T](
+  sess: Option[Token],
+  mess: T)

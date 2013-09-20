@@ -13,67 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mooo.nilewapps.bokbytarappen.server
+package com.mooo.nilewapps.bokbytarappen.server.authentication
 
 import scala.concurrent._
 import ExecutionContext.Implicits.global
-import spray.routing.authentication.UserPass
 
 import scala.slick.driver.H2Driver.simple._
 import Database.threadLocalSession
 
 import com.typesafe.config._
 
+import com.mooo.nilewapps.bokbytarappen.server._
+import data._
+import util._
 import DB._
 
-trait Authenticator {
-
-  /**
-   * The duration in ms for which the session token is valid.
-   */
-  lazy val expirationTime = ConfigFactory.load().getMilliseconds("session.expiration-time")
-
-  /**
-   * Authenticate a user with password and execute a method on the profile.
-   */
-  def passwordAuthenticator[U](
-      credentials: Option[UserPass],
-      f: Profile => Option[U]): Future[Option[U]] = future {
-    credentials match {
-      case Some(c) =>
-        query {
-          getProfile(c.user) match {
-            case Some(profile) =>
-              if (BCrypt.checkpw(c.pass, profile.passwordHash)) f(profile)
-              else None
-            case _ => None
-          }
-        }
-      case _ => None
-    }
-  }
-
-  /**
-   * Takes a user/pass-pair, checks their validity and returns the
-   * profile of the user and a new Session.
-   */
-  def passwordAuthenticator(credentials: Option[UserPass]): Future[Option[(Profile, Token)]] =
-    passwordAuthenticator(credentials, p => {
-      lazy val series = SecureString()
-      lazy val token = SecureString()
-      lazy val time = System.currentTimeMillis() + expirationTime
-      if (Sessions.insert(Session(p.id, SHA256(series), SHA256(token), time)) == 1) {
-        Some(p, Token(p.email.get, series, token, Some(time)))
-      } else None
-    })
-
-  /**
-   * Takes a user/pass-pair, checks their validity and returns the
-   * profile of the user without creating a new Session.
-   */
-  def passwordAuthenticatorNoSession(credentials: Option[UserPass]): Future[Option[Profile]] =
-    passwordAuthenticator(credentials, Some(_))
-
+trait TokenAuthenticators {
 
   /**
    * Excutes a method on a token and the profile that the token belongs to.
@@ -99,7 +54,7 @@ trait Authenticator {
     tokenAuthenticator(credentials, (p, t) => {
       lazy val token = SecureString()
       lazy val currentTime = System.currentTimeMillis()
-      lazy val expires = currentTime + expirationTime
+      lazy val expires = currentTime + ConfigFactory.load().getMilliseconds("session.expiration-time")
       lazy val seriesHash = SHA256(t.series)
       (for {
         s <- Sessions
@@ -131,23 +86,5 @@ trait Authenticator {
         case 0 => None
       }
     })
-  }
-
-  /**
-   * Takes a password reset token and returns the profile it belongs to if it is valid.
-   */
-  def passwordResetTokenAuthenticator(token: Option[String]): Future[Option[Profile]] = future {
-    token match {
-      case Some(t) => query {
-        (for {
-          prt <- PasswordResetTokens
-          profile <- Profiles
-          if prt.token === SHA256(t)  &&
-             prt.id    === profile.id &&
-             prt.expirationTime > System.currentTimeMillis()
-        } yield profile).list.headOption
-      }
-      case _ => None
-    }
   }
 }

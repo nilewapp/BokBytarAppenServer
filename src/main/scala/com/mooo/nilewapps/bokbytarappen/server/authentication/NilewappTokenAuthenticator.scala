@@ -13,18 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mooo.nilewapps.bokbytarappen.server
+package com.mooo.nilewapps.bokbytarappen.server.authentication
 
 import scala.concurrent.{ExecutionContext, Future}
 import spray._
 import routing._
 import authentication._
 
+import com.mooo.nilewapps.bokbytarappen.server.data._
+
 /**
  * Defines fuctions to extract a Token from an `Authorization` header with
  * the format `Nilewapp key="value",...` to a Map.
  */
-class TokenAuthenticator[U](
+class NilewappTokenAuthenticator[U](
     val realm: String,
     val authenticator: Option[Token] => Future[Option[U]])
     (implicit val executionContext: ExecutionContext)

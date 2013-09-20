@@ -35,7 +35,6 @@ import MediaTypes._
 import scala.slick.driver.H2Driver.simple._
 import Database.threadLocalSession
 
-import TokenJsonProtocol._
 import ServiceErrors._
 
 import scala.language.postfixOps
@@ -43,6 +42,9 @@ import scala.language.postfixOps
 import com.typesafe.config._
 
 import DB._
+import authentication.Authenticators._
+import data._
+import TokenJsonProtocol._
 
 /**
  * Actor that runs the service.
@@ -58,37 +60,9 @@ class ServiceActor extends Actor with Service {
 /**
  * Provides all functionality of the server.
  */
-trait Service extends HttpService with Authenticator {
+trait Service extends HttpService {
 
   def domain = ConfigFactory.load().getString("http-server.domain")
-
-  /**
-   * Authenticates with a user/pass-pair and returns the user Profile and a new session Token.
-   */
-  def authWithPass = authenticate(new BasicHttpAuthenticator("Protected", passwordAuthenticator))
-
-  /**
-   * Authenticates with a user/pass-pair and returns the user Profile.
-   */
-  def authWithPassNoSession =
-    authenticate(new BasicHttpAuthenticator("Protected", passwordAuthenticatorNoSession))
-
-  /**
-   * Authenticates with a session Token and returns the user Profile and a new session Token.
-   */
-  def authWithToken = authenticate(new TokenAuthenticator("Protected", tokenAuthenticator))
-
-  /**
-   * Authenticates with a session Token and returns the user Profile.
-   */
-  def authWithTokenNoSession =
-    authenticate(new TokenAuthenticator("Protected", tokenAuthenticatorNoSession))
-
-  /**
-   * Authenticates with a password reset token.
-   */
-  def authWithPasswordResetToken =
-    authenticate(new PasswordResetTokenAuthenticator("Password reset", passwordResetTokenAuthenticator))
 
   /**
    * Asserts that an email address is valid and available.
@@ -154,20 +128,22 @@ trait Service extends HttpService with Authenticator {
           }
         }
       } ~
-      path("confirm-email" / Rest) { token =>
-        respondWithMediaType(`text/html`) {
-          complete {
-            def page(s: String) = {
-              <html>
-                <body>
-                  <h1>{s}</h1>
-                </body>
-              </html>
-            }
+      path("confirm-email" / Rest) { tokenString =>
+        authWithEmailConfirmationToken(tokenString) { token =>
+          respondWithMediaType(`text/html`) {
+            complete {
+              def page(s: String) = {
+                <html>
+                  <body>
+                    <h1>{s}</h1>
+                  </body>
+                </html>
+              }
 
-            EmailChangeManager.confirmEmail(token) match {
-              case Some(email) => page("Your email address %s has been confirmed!".format(email))
-              case _ => page("Your email address was not confirmed...")
+              EmailChangeManager.confirmEmail(token) match {
+                case Some(email) => page("Your email address %s has been confirmed!".format(email))
+                case _ => page("Your email address was not confirmed...")
+              }
             }
           }
         }

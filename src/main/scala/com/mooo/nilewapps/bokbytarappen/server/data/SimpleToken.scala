@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mooo.nilewapps.bokbytarappen.server
+package com.mooo.nilewapps.bokbytarappen.server.data
 
-case class SessMess[T](
-  sess: Option[Token],
-  mess: T)
+case class SimpleToken(
+  id: Int,
+  token: String,
+  expirationTime: Long)
+

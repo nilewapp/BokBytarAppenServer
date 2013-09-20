@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mooo.nilewapps.bokbytarappen.server
+package com.mooo.nilewapps.bokbytarappen.server.authentication
 
 import scala.concurrent.{ExecutionContext, Future}
 import spray._
@@ -22,15 +22,16 @@ import authentication._
 import http._
 import httpx.unmarshalling._
 
-class PasswordResetTokenAuthenticator[U](
+class SimpleTokenAuthenticator[U](
     val realm: String,
-    val authenticator: Option[String] => Future[Option[U]])
+    val authenticator: Option[String] => Future[Option[U]],
+    val token: Option[String] = None)
     (implicit val executionContext: ExecutionContext)
   extends ContextAuthenticator[U] {
 
   def apply(ctx: RequestContext) = {
     authenticate(ctx) map {
-      case Some(token) => Right(token)
+      case Some(t) => Right(t)
       case None => Left {
         AuthenticationFailedRejection(realm)
       }
@@ -41,9 +42,10 @@ class PasswordResetTokenAuthenticator[U](
    * Extracts a password reset token from the request entity and
    * passes it to the authenticator.
    */
-  def authenticate(ctx: RequestContext) = {
-    authenticator {
-      ctx.request.entity.as[FormData] match {
+  def authenticate(ctx: RequestContext) = authenticator {
+    token match {
+      case Some(t) => Some(t)
+      case None => ctx.request.entity.as[FormData] match {
         case Right(m) => m.fields.get("token")
         case _ => None
       }

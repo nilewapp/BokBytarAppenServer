@@ -22,24 +22,18 @@ import com.typesafe.config._
 
 import DB._
 
+import data.EmailConfirmationToken
+
 object EmailChangeManager {
 
   /**
-   * Validates the confirmation token, updates the profile and returns the new email address.
+   * Updates the email of the profile and returns the new email address.
    */
-  def confirmEmail(emailConfirmationToken: String): Option[String] = query {
-    (for {
-      t <- EmailConfirmationTokens
-      p <- Profiles
-      if t.token === SHA256(emailConfirmationToken) &&
-         t.id    === p.id
-    } yield t).take(1).list.headOption match {
-      case Some(token) => getProfile(token.id) match {
-        case Some(profile) => updateEmail(profile, Some(token.email)) match {
-          case 1 => Some(token.email)
-          case 0 => None
-        }
-        case _ => None
+  def confirmEmail(token: EmailConfirmationToken): Option[String] = query {
+    getProfile(token.id) match {
+      case Some(profile) => updateEmail(profile, Some(token.email)) match {
+        case 1 => Some(token.email)
+        case 0 => None
       }
       case _ => None
     }
