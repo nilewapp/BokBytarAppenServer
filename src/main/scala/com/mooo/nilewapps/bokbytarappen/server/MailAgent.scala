@@ -15,7 +15,7 @@
  */
 package com.mooo.nilewapps.bokbytarappen.server
 
-import javax.mail._
+import javax.mail.{Transport, PasswordAuthentication, Message}
 import javax.mail.internet._
 
 import java.util.Properties
@@ -28,7 +28,7 @@ import com.typesafe.config._
 object MailAgent {
 
   /**
-   * Sends an email to a given user with a given subject and content text 
+   * Sends an email to a given user with a given subject and content text
    * using TLS. Uses application configuration to find sender credentials
    * and smtp options.
    */
@@ -45,7 +45,7 @@ object MailAgent {
     props.put("mail.smtp.host", config.getString("smtp-host"))
     props.put("mail.smtp.port", config.getString("port"))
 
-    val session = Session.getInstance(props, new javax.mail.Authenticator() {
+    val session = javax.mail.Session.getInstance(props, new javax.mail.Authenticator() {
         override def getPasswordAuthentication() = new PasswordAuthentication(from, pass)
       })
 

@@ -20,27 +20,25 @@ import Database.threadLocalSession
 
 import com.typesafe.config._
 
-object LostPasswordManager extends DB {
+import DB._
+
+object LostPasswordManager {
 
   /**
    * Creates a password reset token and stores it in the database if
    * the given email address is registered.
    */
-  def requestResetToken(email: String): Option[String] = {
-
-    lazy val expirationTime = ConfigFactory.load().getMilliseconds("password-reset.expiration-time")
-
-    query {
-      Query(Profiles).filter(_.email === email).list.headOption match {
-        case Some(profile) =>
-          lazy val token = SecureString()
-          lazy val expires = System.currentTimeMillis() + expirationTime
-          PasswordResetTokens.insert(PasswordResetToken(profile.id, SHA256(token), expires)) match {
-            case 1 => Some(token)
-            case _ => None
-          }
-        case _ => None
-      }
+  def requestResetToken(email: String): Option[String] = query {
+    getProfile(email) match {
+      case Some(profile) =>
+        lazy val token = SecureString()
+        lazy val expires = System.currentTimeMillis() +
+          ConfigFactory.load().getMilliseconds("password-reset.expiration-time")
+        PasswordResetTokens.insert(SimpleToken(profile.id, SHA256(token), expires)) match {
+          case 1 => Some(token)
+          case _ => None
+        }
+      case _ => None
     }
   }
 
@@ -48,7 +46,7 @@ object LostPasswordManager extends DB {
    * Creates a password reset token and sends a reset link to the given
    * email address if it is registered in the database.
    */
-  def sendResetLink(email: String) = LostPasswordManager.requestResetToken(email) match {
+  def sendResetLink(email: String) = requestResetToken(email) match {
     case Some(token) => MailAgent.send(
       email,
       "Password reset link",

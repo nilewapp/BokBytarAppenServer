@@ -22,7 +22,7 @@ import com.typesafe.config._
 
 case class Profile(
   id: Int,
-  email: String,
+  email: Option[String],
   passwordHash: String,
   name: String,
   phoneNumber: Option[String],
@@ -34,22 +34,28 @@ case class Session(
   tokenHash: String,
   expirationTime: Long)
 
-case class PasswordResetToken(
+case class SimpleToken(
   id: Int,
   token: String,
   expirationTime: Long)
 
+case class EmailConfirmationToken(
+  id: Int,
+  token: String,
+  email: String)
+
 /**
  * Defines tables and provides database access
  */
-trait DB {
+object DB {
 
-  val config = ConfigFactory.load().getConfig("db")
+  def config = ConfigFactory.load().getConfig("db")
 
-  val DBName = config.getString("name")
-  lazy val url = "jdbc:h2:" + getClass.getResource("/").getPath() + DBName +
-    ";USER=" + config.getString("user") + ";PASSWORD=" + config.getString("pass")
-  lazy val db = Database.forURL(url, driver = "org.h2.Driver")
+  def dbPath = getClass.getResource("/") + config.getString("name")
+
+  def url = "jdbc:h2:%s;USER=%s;PASSWORD=%s".format(dbPath, config.getString("user"), config.getString("pass"))
+
+  implicit val db = Database.forURL(url, driver = "org.h2.Driver")
 
   /**
    * Tables
@@ -76,7 +82,7 @@ trait DB {
 
   object Profiles extends Table[Profile]("PROFILES") {
     def id = column[Int]("ID", O.AutoInc, O.PrimaryKey)
-    def email = column[String]("EMAIL")
+    def email = column[Option[String]]("EMAIL")
     def passwordHash = column[String]("PASSWORD_HASH")
     def name = column[String]("NAME")
     def phoneNumber = column[Option[String]]("PHONE_NUMBER")
@@ -133,17 +139,80 @@ trait DB {
     def profileFK = foreignKey("MEMBERS_PROFILE_FK", profile, Profiles)(_.id)
   }
 
-  object PasswordResetTokens extends Table[PasswordResetToken]("PASSWORD_RESET_TOKENS") {
+  object PasswordResetTokens extends Table[SimpleToken]("PASSWORD_RESET_TOKENS") {
     def id = column[Int]("ID")
     def token = column[String]("TOKEN")
     def expirationTime = column[Long]("EXPIRATION_TIME")
-    def * = id ~ token ~ expirationTime <> (PasswordResetToken, PasswordResetToken.unapply _)
+    def * = id ~ token ~ expirationTime <> (SimpleToken, SimpleToken.unapply _)
     def passwordResetTokensPK = primaryKey("PASSWORD_RESET_TOKENS_PK", id ~ token)
     def profileFK = foreignKey("PASSWORD_RESET_TOKENS_PROFILE_FK", id, Profiles)(_.id)
   }
 
+  object EmailConfirmationTokens extends Table[EmailConfirmationToken]("EMAIL_CONFIRMATION_TOKENS") {
+    def id = column[Int]("ID", O.PrimaryKey)
+    def token = column[String]("TOKEN")
+    def email = column[String]("EMAIL")
+    def * = id ~ token ~ email <> (EmailConfirmationToken, EmailConfirmationToken.unapply _)
+    def profileFK = foreignKey("EMAIL_CONFIRMATION_TOKENS_PROFILE_FK", id, Profiles)(_.id)
+  }
+
   def query[T](f: => T): T = db withSession f
 
+  /**
+   * Inserts a new profile into the database.
+   */
+  def insertProfile(passwordHash: String, name: String, phoneNumber: Option[String], university: String) = {
+    (Profiles.passwordHash ~
+     Profiles.name ~
+     Profiles.phoneNumber ~
+     Profiles.university) returning Profiles.id insert(
+       (passwordHash, name, phoneNumber, university))
+  }
+
+  /**
+   * Delete all session data for a specific user.
+   */
+  def deleteSessionData(id: Int) = {
+    Query(Sessions).filter(_.id === id).delete
+    Query(PasswordResetTokens).filter(_.id === id).delete
+  }
+
+  def updateEmail(user: Profile, email: Option[String]) = {
+    deleteSessionData(user.id)
+    Query(Profiles).filter(_.id === user.id).update(
+      Profile(
+        user.id,
+        email,
+        user.passwordHash,
+        user.name,
+        user.phoneNumber,
+        user.university))
+  }
+
+  /**
+   * Delete all session data of a specific user and update its password.
+   */
+  def updatePassword(user: Profile, password: String) = {
+    deleteSessionData(user.id)
+    Query(Profiles).filter(_.id === user.id).update(
+      Profile(
+        user.id,
+        user.email,
+        BCrypt.hashpw(password, BCrypt.gensalt()),
+        user.name,
+        user.phoneNumber,
+        user.university))
+  }
+
+  /**
+   * Queries a Profile by id.
+   */
+  def getProfile(id: Int) = Query(Profiles).filter(_.id === id).take(1).list.headOption
+
+  /**
+   * Queries a Profile by email.
+   */
+  def getProfile(email: String) = Query(Profiles).filter(_.email === email).take(1).list.headOption
 }
 
 

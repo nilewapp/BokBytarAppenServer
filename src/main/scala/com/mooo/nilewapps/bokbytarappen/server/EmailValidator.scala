@@ -18,10 +18,12 @@ package com.mooo.nilewapps.bokbytarappen.server
 import scala.slick.driver.H2Driver.simple._
 import Database.threadLocalSession
 
+import DB._
+
 /**
  * Defines methods to validate email addresses.
  */
-object EmailValidator extends DB {
+object EmailValidator {
 
   val emailRegex = """^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$""".r
 
@@ -29,13 +31,10 @@ object EmailValidator extends DB {
    * Returns true if the given email address matches the format of a
    * valid email address.
    */
-  def isValid(email: String) = emailRegex.findFirstIn(email).isDefined 
+  def isValid(email: String) = emailRegex.findFirstIn(email).isDefined
 
   /**
    * Returns true if the given email address is not already registered.
    */
-  def isAvailable(email: String) =
-    query {
-      !Query(Profiles).filter(_.email === email).list.headOption.isDefined
-    }
+  def isAvailable(email: String) = query(!getProfile(email).isDefined)
 }

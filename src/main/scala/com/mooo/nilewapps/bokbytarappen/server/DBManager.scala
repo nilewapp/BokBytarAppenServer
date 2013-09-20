@@ -18,10 +18,12 @@ package com.mooo.nilewapps.bokbytarappen.server
 import scala.slick.driver.H2Driver.simple._
 import Database.threadLocalSession
 
+import DB._
+
 /**
  * Provides some utilities for creating and managing the database
  */
-object DBManager extends DB {
+object DBManager {
 
   def all = Countries.ddl ++
     Cities.ddl ++
@@ -32,43 +34,11 @@ object DBManager extends DB {
     Sessions.ddl ++
     Groups.ddl ++
     Members.ddl ++
-    PasswordResetTokens.ddl
+    PasswordResetTokens.ddl ++
+    EmailConfirmationTokens.ddl
 
   def dropAll = query {
     all.drop
-  }
-
-  def insertProfile(email: String, passwordHash: String, name: String, phoneNumber: Option[String], university: String) {
-    query {
-      (Profiles.email ~
-       Profiles.passwordHash ~
-       Profiles.name ~
-       Profiles.phoneNumber ~
-       Profiles.university).insert(
-         (email, passwordHash, name, phoneNumber, university))
-    }
-  }
-
-  /**
-   * Delete all session data for a specific user.
-   */
-  def deleteSessionData(id: Int) = {
-    query {
-      Query(Sessions).filter(_.id === id).delete
-      Query(PasswordResetTokens).filter(_.id === id).delete
-    }
-  }
-
-  /**
-   * Delete all session data of a specific user and update its password.
-   */
-  def updatePassword(user: Profile, password: String) = {
-    deleteSessionData(user.id)
-    query {
-      lazy val passwordHash = BCrypt.hashpw(password, BCrypt.gensalt())
-      lazy val old = Query(Profiles).filter(_.id === user.id)
-      old.update(Profile(user.id, user.email, passwordHash, user.name, user.phoneNumber, user.university))
-    }
   }
 
   def init = query {
