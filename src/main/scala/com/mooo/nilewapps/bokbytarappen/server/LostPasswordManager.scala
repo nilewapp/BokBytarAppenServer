@@ -34,16 +34,17 @@ object LostPasswordManager {
     getProfile(email) match {
       case Some(profile) =>
 
-        lazy val now = System.currentTimeMillis()
+        lazy val tokenString = SecureString()
 
-        def expirationTime = now + ConfigFactory.load().getMilliseconds("password-reset.expiration-time")
+        def expirationTime = System.currentTimeMillis() +
+          ConfigFactory.load().getMilliseconds("password-reset.expiration-time")
 
-        lazy val token = SimpleToken(profile.id, SecureString(), expirationTime)
+        lazy val token = SimpleToken(profile.id, SHA256(tokenString), expirationTime)
 
         Query(PasswordResetTokens).filter(q => q.id === profile.id).update(token) match {
-          case 1 => Some(token.token)
+          case 1 => Some(tokenString)
           case 0 => PasswordResetTokens.insert(token) match {
-            case 1 => Some(token.token)
+            case 1 => Some(tokenString)
             case 0 => None
           }
         }
