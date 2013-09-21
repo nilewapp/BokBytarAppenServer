@@ -13,10 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mooo.nilewapps.bokbytarappen.server.data
+package com.mooo.nilewapps.bokbytarappen.server
 
-case class EmailConfirmationToken(
-  id: Int,
-  token: String,
-  email: String,
-  expirationTime: Long)
+import org.specs2.mutable.Specification
+
+import com.typesafe.config._
+
+class EmailChangeManageSpec extends Specification {
+  
+  "EmailChangeManagerSpec" should {
+  }
+}

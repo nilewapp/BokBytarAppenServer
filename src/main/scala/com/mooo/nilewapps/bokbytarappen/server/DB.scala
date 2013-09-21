@@ -128,7 +128,8 @@ object DB {
     def id = column[Int]("ID", O.PrimaryKey)
     def token = column[String]("TOKEN")
     def email = column[String]("EMAIL")
-    def * = id ~ token ~ email <> (data.EmailConfirmationToken, data.EmailConfirmationToken.unapply _)
+    def expirationTime = column[Long]("EXPIRATION_TIME")
+    def * = id ~ token ~ email ~ expirationTime <> (data.EmailConfirmationToken, data.EmailConfirmationToken.unapply _)
     def tokenIndex = index("EMAIL_CONFIRMATION_TOKENS_TOKEN_INDEX", token, unique = true)
     def profileFK = foreignKey("EMAIL_CONFIRMATION_TOKENS_PROFILE_FK", id, Profiles)(_.id)
   }
@@ -138,7 +139,7 @@ object DB {
   /**
    * Inserts a new profile into the database.
    */
-  def insertProfile(passwordHash: String, name: String, phoneNumber: Option[String], university: String) = {
+  def insertProfile(passwordHash: String, name: String, phoneNumber: Option[String], university: String): Int = {
     (Profiles.passwordHash ~
      Profiles.name ~
      Profiles.phoneNumber ~
@@ -149,16 +150,26 @@ object DB {
   /**
    * Delete all session data for a specific user.
    */
-  def deleteSessionData(id: Int) = {
+  def deleteSessionData(id: Int) {
     Query(Sessions).filter(_.id === id).delete
-    Query(PasswordResetTokens).filter(_.id === id).delete
+  }
+
+  /**
+   * Deletes expired Sessions etc.
+   */
+  def deleteOldData() {
+    val t = System.currentTimeMillis()
+    Query(Sessions).filter(_.expirationTime <= t).delete
+    Query(PasswordResetTokens).filter(_.expirationTime <= t).delete
+    Query(EmailConfirmationTokens).filter(_.expirationTime <= t).delete
   }
 
   /**
    * Deletes all session data and updates the email address of a given user.
    */
-  def updateEmail(user: data.Profile, email: Option[String]) = {
+  def updateEmail(user: data.Profile, email: Option[String]): Int = {
     deleteSessionData(user.id)
+    Query(EmailConfirmationTokens).filter(_.id === user.id).delete
     Query(Profiles).filter(_.id === user.id).update(
       data.Profile(
         user.id,
@@ -172,8 +183,9 @@ object DB {
   /**
    * Delete all session data of a specific user and update its password.
    */
-  def updatePassword(user: data.Profile, password: String) = {
+  def updatePassword(user: data.Profile, password: String): Int = {
     deleteSessionData(user.id)
+    Query(PasswordResetTokens).filter(_.id === user.id).delete
     Query(Profiles).filter(_.id === user.id).update(
       data.Profile(
         user.id,
@@ -187,12 +199,14 @@ object DB {
   /**
    * Queries a Profile by id.
    */
-  def getProfile(id: Int) = Query(Profiles).filter(_.id === id).take(1).list.headOption
+  def getProfile(id: Int): Option[data.Profile] =
+    Query(Profiles).filter(_.id === id).take(1).list.headOption
 
   /**
    * Queries a Profile by email.
    */
-  def getProfile(email: String) = Query(Profiles).filter(_.email === email).take(1).list.headOption
+  def getProfile(email: String): Option[data.Profile] =
+    Query(Profiles).filter(_.email === email).take(1).list.headOption
 }
 
 

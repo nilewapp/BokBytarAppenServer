@@ -45,15 +45,20 @@ object EmailChangeManager {
   def requestEmailConfirmationToken(id: Int, email: String): Option[String] = query {
     getProfile(id) match {
       case Some(profile) =>
+
         lazy val token = SecureString()
-        lazy val confToken = EmailConfirmationToken(profile.id, SHA256(token), email)
+
+        lazy val expirationTime = System.currentTimeMillis() +
+          ConfigFactory.load().getMilliseconds("email-confirmation.expiration-time")
+
+        lazy val confToken = EmailConfirmationToken(profile.id, SHA256(token), email, expirationTime)
+
         Query(EmailConfirmationTokens).filter(_.id === profile.id).update(confToken) match {
           case 1 => Some(token)
-          case 0 => EmailConfirmationTokens.insert(
-            EmailConfirmationToken(profile.id, SHA256(token), email)) match {
-              case 1 => Some(token)
-              case 0 => None
-            }
+          case 0 => EmailConfirmationTokens.insert(confToken) match {
+            case 1 => Some(token)
+            case 0 => None
+          }
         }
       case _ => None
     }

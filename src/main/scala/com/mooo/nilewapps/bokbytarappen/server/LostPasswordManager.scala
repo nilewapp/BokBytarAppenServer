@@ -28,17 +28,24 @@ object LostPasswordManager {
 
   /**
    * Creates a password reset token and stores it in the database if
-   * the given email address is registered.
+   * the given email address is registered. Replaces any old token.
    */
   def requestResetToken(email: String): Option[String] = query {
     getProfile(email) match {
       case Some(profile) =>
-        lazy val token = SecureString()
-        lazy val expires = System.currentTimeMillis() +
-          ConfigFactory.load().getMilliseconds("password-reset.expiration-time")
-        PasswordResetTokens.insert(SimpleToken(profile.id, SHA256(token), expires)) match {
-          case 1 => Some(token)
-          case _ => None
+
+        lazy val now = System.currentTimeMillis()
+
+        def expirationTime = now + ConfigFactory.load().getMilliseconds("password-reset.expiration-time")
+
+        lazy val token = SimpleToken(profile.id, SecureString(), expirationTime)
+
+        Query(PasswordResetTokens).filter(q => q.id === profile.id).update(token) match {
+          case 1 => Some(token.token)
+          case 0 => PasswordResetTokens.insert(token) match {
+            case 1 => Some(token.token)
+            case 0 => None
+          }
         }
       case _ => None
     }

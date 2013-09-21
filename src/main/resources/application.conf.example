@@ -40,3 +40,7 @@ mail {
 password-reset {
   expiration-time = 1 d
 }
+
+email-confirmation {
+  expriation-time = 1 d
+}

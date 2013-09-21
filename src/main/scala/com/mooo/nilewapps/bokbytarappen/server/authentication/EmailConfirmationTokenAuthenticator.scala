@@ -34,7 +34,9 @@ trait EmailConfirmationTokenAuthenticator {
   def emailConfirmationTokenAuthenticator(token: Option[String]): Future[Option[EmailConfirmationToken]] = future {
     token match {
       case Some(t) => query {
-        Query(EmailConfirmationTokens).filter(_.token === SHA256(t)).take(1).list.headOption
+        Query(EmailConfirmationTokens).filter(q =>
+          q.token === SHA256(t) &&
+          q.expirationTime > System.currentTimeMillis()).take(1).list.headOption
       }
       case _ => None
     }
