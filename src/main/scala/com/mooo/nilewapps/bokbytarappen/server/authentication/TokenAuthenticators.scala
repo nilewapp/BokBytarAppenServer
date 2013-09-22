@@ -33,17 +33,14 @@ trait TokenAuthenticators {
   /**
    * Excutes a method on a token and the profile that the token belongs to.
    */
-  def tokenAuthenticator[U](
-      credentials: Option[Token],
-      f: (Profile, Token) => Option[U]): Future[Option[U]] = future {
-    credentials match {
-      case Some(t) => query {
-        getProfile(t.email) match {
-          case Some(p) => f(p, t)
-          case _ => None
-        }
+  def tokenAuthenticator[U](credentials: Option[Token], f: (Profile, Token) => Option[U]): Future[Option[U]] = future {
+    query  {
+      (for {
+        t <- credentials
+        p <- getProfile(t.email)
+      } yield (p, t)) flatMap {
+        case (p, t) => f(p, t)
       }
-      case _ => None
     }
   }
 

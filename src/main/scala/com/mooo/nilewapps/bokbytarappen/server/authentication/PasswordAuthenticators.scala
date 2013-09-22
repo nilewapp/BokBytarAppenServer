@@ -37,18 +37,11 @@ trait PasswordAuthenticators {
   def passwordAuthenticator[U](
       credentials: Option[UserPass],
       f: Profile => Option[U]): Future[Option[U]] = future {
-    credentials match {
-      case Some(c) =>
-        query {
-          getProfile(c.user) match {
-            case Some(profile) =>
-              if (BCrypt.checkpw(c.pass, profile.passwordHash)) f(profile)
-              else None
-            case _ => None
-          }
-        }
-      case _ => None
-    }
+    (for {
+      c <- credentials
+      profile <- query(getProfile(c.user))
+      if BCrypt.checkpw(c.pass, profile.passwordHash)
+    } yield profile) flatMap f
   }
 
   /**
@@ -60,7 +53,7 @@ trait PasswordAuthenticators {
       lazy val series = SecureString()
       lazy val token = SecureString()
       lazy val time = System.currentTimeMillis() + ConfigFactory.load().getMilliseconds("session.expiration-time")
-      if (Sessions.insert(Session(p.id, SHA256(series), SHA256(token), time)) == 1) {
+      if (query(Sessions.insert(Session(p.id, SHA256(series), SHA256(token), time))) == 1) {
         Some(p, Token(p.email.get, series, token, Some(time)))
       } else None
     })

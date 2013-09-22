@@ -31,38 +31,31 @@ object EmailChangeManager {
    * Updates the email of the profile and returns the new email address.
    */
   def confirmEmail(token: EmailConfirmationToken): Option[String] = query {
-    getProfile(token.id) match {
-      case Some(profile) => updateEmail(profile, Some(token.email)) match {
-        case 1 => Some(token.email)
-        case 0 => None
-      }
-      case _ => None
-    }
+    for {
+      profile <- getProfile(token.id)
+      if updateEmail(profile, Some(token.email)) == 1
+    } yield token.email
   }
 
   /**
    * Creates an email confirmation token limited to one per account.
    */
   def requestEmailConfirmationToken(id: Int, email: String): Option[String] = query {
-    getProfile(id) match {
-      case Some(profile) =>
 
-        lazy val tokenString = SecureString()
+    lazy val tokenString = SecureString()
 
-        lazy val expirationTime = System.currentTimeMillis() +
-          ConfigFactory.load().getMilliseconds("email-confirmation.expiration-time")
+    def expirationTime = System.currentTimeMillis() +
+      ConfigFactory.load().getMilliseconds("email-confirmation.expiration-time")
 
-        lazy val token = EmailConfirmationToken(profile.id, SHA256(tokenString), email, expirationTime)
+    for {
+      profile <- getProfile(id)
 
-        Query(EmailConfirmationTokens).filter(_.id === profile.id).update(token) match {
-          case 1 => Some(tokenString)
-          case 0 => EmailConfirmationTokens.insert(token) match {
-            case 1 => Some(tokenString)
-            case 0 => None
-          }
-        }
-      case _ => None
-    }
+      token = EmailConfirmationToken(profile.id, SHA256(tokenString), email, expirationTime)
+
+      if Query(EmailConfirmationTokens).filter(_.id === profile.id).update(token) == 1 ||
+         EmailConfirmationTokens.insert(token) == 1
+
+    } yield tokenString
   }
 
   /**

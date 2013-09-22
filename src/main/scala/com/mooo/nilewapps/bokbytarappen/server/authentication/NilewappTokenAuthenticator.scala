@@ -16,9 +16,14 @@
 package com.mooo.nilewapps.bokbytarappen.server.authentication
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.parsing.combinator._
+
 import spray._
 import routing._
 import authentication._
+import http._
+import spray.util._
+import HttpHeaders._
 
 import com.mooo.nilewapps.bokbytarappen.server.data._
 
@@ -33,7 +38,9 @@ class NilewappTokenAuthenticator[U](
   extends ContextAuthenticator[U] {
 
   def apply(ctx: RequestContext) = {
-    authenticate(ctx) map {
+    val authHeader = ctx.request.headers.findByType[`Authorization`]
+    val credentials = authHeader.map { case Authorization(creds) => creds }
+    authenticate(credentials) map {
       case Some(token) => Right(token)
       case None => Left {
         AuthenticationFailedRejection(realm)
@@ -41,37 +48,25 @@ class NilewappTokenAuthenticator[U](
     }
   }
 
-  def scheme = "Nilewapp "
-
-  def params(ctx: RequestContext): Map[String, String] = Map.empty
+  def scheme = "Nilewapp"
 
   /**
    * Extracts the token from the Authorization header and passes it as
    * the argument to the authenticator.
    */
-  def authenticate(ctx: RequestContext) = {
+  def authenticate(credentials: Option[HttpCredentials]) = {
     authenticator {
-      ctx.request.headers.find(_.name == "Authorization") match {
-        case Some(head) =>
-          if (head.value.startsWith(scheme)) {
-            TokenFactory(asMap(head.value.replaceFirst(scheme, "")))
-          } else None
+      credentials.flatMap {
+        case GenericHttpCredentials(scheme, params) => 
+          val de = new sun.misc.BASE64Decoder()
+          val t = params.mapValues(v => new String(de.decodeBuffer(v)))
+          for {
+            email <- t.get("email")
+            series <- t.get("series")
+            token <- t.get("token")
+          } yield Token(email, series, token, None)
         case _ => None
       }
     }
   }
-
-  /**
-   * Decodes the token in the Authorization header.
-   */
-  def asMap(s: String) = {
-    lazy val de = new sun.misc.BASE64Decoder()
-    s.split(",").map {
-      a => a.split("=") match {
-        case Array(key, value @ _*) =>
-          (key, new String(de.decodeBuffer(value.mkString("=").replaceAll("\"", ""))))
-      }
-    }.toMap
-  }
 }
-

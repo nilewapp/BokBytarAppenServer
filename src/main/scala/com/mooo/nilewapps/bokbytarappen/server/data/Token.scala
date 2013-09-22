@@ -31,17 +31,3 @@ import DefaultJsonProtocol._
 object TokenJsonProtocol extends DefaultJsonProtocol {
   implicit val TokenFormat = jsonFormat4(Token)
 }
-
-object TokenFactory {
-
-  /**
-   * Produces an Option[Token] from a Map containing the keys "email", "series"
-   * and "token". If any of these keys don't exist None is returned.
-   */
-  def apply(vals: Map[String, String]): Option[Token] = 
-    try {
-      Some(Token(vals("email"), vals("series"), vals("token"), None))
-    } catch {
-      case e: NoSuchElementException => None
-    }
-}

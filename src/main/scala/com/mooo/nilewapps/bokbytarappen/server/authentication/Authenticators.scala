@@ -24,10 +24,10 @@ import Database.threadLocalSession
 
 import com.typesafe.config._
 
-import com.mooo.nilewapps.bokbytarappen.server._
-import data._
-import util._
-import DB._
+import com.mooo.nilewapps.bokbytarappen.server
+import server.data._
+import server.util._
+import server.DB._
 
 trait Authenticators extends PasswordAuthenticators
   with TokenAuthenticators

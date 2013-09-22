@@ -25,13 +25,15 @@ import ExecutionContext.Implicits.global
 import scala.slick.driver.H2Driver.simple._
 import Database.threadLocalSession
 
-import com.mooo.nilewapps.bokbytarappen.server._
-import DB._
-import data._
+import com.mooo.nilewapps.bokbytarappen.server
+import server.DB._
+import server.data._
+import server.util._
 
-class EmailConfirmationTokenAuthenticatorSpec extends Specification 
-    with EmailConfirmationTokenAuthenticator 
-    with NoTimeConversions {
+class EmailConfirmationTokenAuthenticatorSpec
+  extends Specification 
+  with EmailConfirmationTokenAuthenticator 
+  with NoTimeConversions {
   
   "EmailConfirmationTokenAuthenticator" should {
     "not return a valid token if no token string is given" in {
@@ -104,7 +106,5 @@ class EmailConfirmationTokenAuthenticatorSpec extends Specification
         Query(Profiles).filter(_.id === profileId).delete
       }
     }
-
   }
 }
-

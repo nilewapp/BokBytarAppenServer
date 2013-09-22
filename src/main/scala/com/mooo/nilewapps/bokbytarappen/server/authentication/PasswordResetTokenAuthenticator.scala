@@ -37,9 +37,11 @@ trait PasswordResetTokenAuthenticator {
         (for {
           prt <- PasswordResetTokens
           profile <- Profiles
-          if prt.token === SHA256(t)  &&
-             prt.id    === profile.id &&
-             prt.expirationTime > System.currentTimeMillis()
+
+          if prt.token === SHA256(t) &&
+            prt.id === profile.id &&
+            prt.expirationTime > System.currentTimeMillis()
+
         } yield profile).take(1).list.headOption
       }
       case _ => None

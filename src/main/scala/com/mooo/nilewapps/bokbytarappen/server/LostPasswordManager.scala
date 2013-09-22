@@ -32,25 +32,21 @@ object LostPasswordManager {
    * the given email address is registered. Replaces any old token.
    */
   def requestResetToken(email: String): Option[String] = query {
-    getProfile(email) match {
-      case Some(profile) =>
+    
+    lazy val tokenString = SecureString()
 
-        lazy val tokenString = SecureString()
+    def expirationTime = System.currentTimeMillis() +
+      ConfigFactory.load().getMilliseconds("password-reset.expiration-time")
 
-        def expirationTime = System.currentTimeMillis() +
-          ConfigFactory.load().getMilliseconds("password-reset.expiration-time")
+    for {
+      profile <- getProfile(email)
 
-        lazy val token = SimpleToken(profile.id, SHA256(tokenString), expirationTime)
+      token = SimpleToken(profile.id, SHA256(tokenString), expirationTime)
 
-        Query(PasswordResetTokens).filter(q => q.id === profile.id).update(token) match {
-          case 1 => Some(tokenString)
-          case 0 => PasswordResetTokens.insert(token) match {
-            case 1 => Some(tokenString)
-            case 0 => None
-          }
-        }
-      case _ => None
-    }
+      if Query(PasswordResetTokens).filter(q => q.id === profile.id).update(token) == 1 ||
+         PasswordResetTokens.insert(token) == 1
+
+    } yield tokenString
   }
 
   /**
