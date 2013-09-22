@@ -29,18 +29,16 @@ import server.data._
 import server.util._
 import server.DB._
 
-trait Authenticators extends PasswordAuthenticators
-  with TokenAuthenticators
-  with PasswordResetTokenAuthenticator
-  with EmailConfirmationTokenAuthenticator
+import spray.routing.Directives.authenticate
+import spray.routing.authentication.BasicHttpAuthenticator
 
 /**
  * Contains a few default authenticators.
  */
-object Authenticators extends Authenticators {
-
-  import spray.routing.Directives.authenticate
-  import spray.routing.authentication.BasicHttpAuthenticator
+trait Authenticators extends PasswordAuthenticators
+  with TokenAuthenticators
+  with PasswordResetTokenAuthenticator
+  with EmailConfirmationTokenAuthenticator {
 
   /**
    * Authenticates with a user/pass-pair and returns the user Profile and a new session Token.
@@ -77,3 +75,5 @@ object Authenticators extends Authenticators {
     authenticate(new SimpleTokenAuthenticator("Email confirmation", emailConfirmationTokenAuthenticator))
 
 }
+
+object Authenticators extends Authenticators

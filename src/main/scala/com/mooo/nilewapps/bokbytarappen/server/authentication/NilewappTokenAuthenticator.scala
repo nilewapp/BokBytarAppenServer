@@ -29,7 +29,7 @@ import com.mooo.nilewapps.bokbytarappen.server.data._
 
 /**
  * Defines fuctions to extract a Token from an `Authorization` header with
- * the format `Nilewapp key="value",...` to a Map.
+ * the format `Nilewapp email="...",series="...",token="..."` to a Map.
  */
 class NilewappTokenAuthenticator[U](
     val realm: String,
@@ -48,8 +48,6 @@ class NilewappTokenAuthenticator[U](
     }
   }
 
-  def scheme = "Nilewapp"
-
   /**
    * Extracts the token from the Authorization header and passes it as
    * the argument to the authenticator.
@@ -57,7 +55,7 @@ class NilewappTokenAuthenticator[U](
   def authenticate(credentials: Option[HttpCredentials]) = {
     authenticator {
       credentials.flatMap {
-        case GenericHttpCredentials(scheme, params) => 
+        case GenericHttpCredentials("Nilewapp", params) => 
           val de = new sun.misc.BASE64Decoder()
           val t = params.mapValues(v => new String(de.decodeBuffer(v)))
           for {
