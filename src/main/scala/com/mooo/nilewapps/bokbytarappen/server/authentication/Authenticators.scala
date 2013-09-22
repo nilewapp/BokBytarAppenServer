@@ -73,7 +73,7 @@ object Authenticators extends Authenticators {
   /**
    * Authenticates with an email confirmation token.
    */
-  def authWithEmailConfirmationToken(token: String) =
-    authenticate(new SimpleTokenAuthenticator("Email confirmation", emailConfirmationTokenAuthenticator, Some(token)))
+  def authWithEmailConfirmationToken =
+    authenticate(new SimpleTokenAuthenticator("Email confirmation", emailConfirmationTokenAuthenticator))
 
 }

@@ -64,8 +64,6 @@ class ServiceActor extends Actor with Service {
  */
 trait Service extends HttpService {
 
-  def domain = ConfigFactory.load().getString("http-server.domain")
-
   /**
    * Asserts that an email address is valid and available.
    */
@@ -120,7 +118,7 @@ trait Service extends HttpService {
             <html>
               <body>
                 <h1>Enter your new password:</h1>
-                <form name="password-reset-form" action={domain + "/change-password"} method="POST">
+                <form name="password-reset-form" action="/change-password" method="POST">
                   <input type="password" size="25" name="password" />
                   <input type="hidden" name="token" value={token} />
                   <input type="submit" value="Submit" />
@@ -130,23 +128,30 @@ trait Service extends HttpService {
           }
         }
       } ~
-      path("confirm-email" / Rest) { tokenString =>
-        authWithEmailConfirmationToken(tokenString) { token =>
-          respondWithMediaType(`text/html`) {
-            complete {
-              def page(s: String) = {
-                <html>
-                  <body>
-                    <h1>{s}</h1>
-                  </body>
-                </html>
+      /**
+       * Responds with a page that immidiately redirects to a service that will
+       * confirm an email address with the given token.
+       */
+      path("confirm-email" / Rest) { token=>
+        respondWithMediaType(`text/html`) {
+          complete {
+            lazy val formName = "email-confirmation-form"
+            lazy val formSubmit = """
+              window.onload = function() {
+                document.getElementById('%s').submit()
               }
+            """.format(formName)
 
-              EmailChangeManager.confirmEmail(token) match {
-                case Some(email) => page("Your email address %s has been confirmed!".format(email))
-                case _ => page("Your email address was not confirmed...")
-              }
-            }
+            <html>
+              <body>
+                <form name={formName} id={formName} action="/confirm-email" method="POST">
+                  <input type="hidden" name="token" value={token} />
+                </form>
+                <script type="text/javascript">
+                  {formSubmit}
+                </script>
+              </body>
+            </html>
           }
         }
       }
@@ -201,6 +206,29 @@ trait Service extends HttpService {
               complete {
                 EmailChangeManager.requestEmailChange(user.id, email)
                 SessMess(None, "A confirmation email has been sent to %s!".format(email))
+              }
+            }
+          }
+        }
+      } ~
+      /**
+       * Lets the user confirm his email address.
+       */
+      path("confirm-email") {
+        authWithEmailConfirmationToken { token =>
+          respondWithMediaType(`text/html`) {
+            complete {
+              def page(s: String) = {
+                <html>
+                  <body>
+                    <h1>{s}</h1>
+                  </body>
+                </html>
+              }
+
+              EmailChangeManager.confirmEmail(token) match {
+                case Some(email) => page("Your email address %s has been confirmed!".format(email))
+                case None => page("Your email address was not confirmed...")
               }
             }
           }
