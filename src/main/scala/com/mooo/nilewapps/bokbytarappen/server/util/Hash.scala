@@ -16,10 +16,11 @@
 package com.mooo.nilewapps.bokbytarappen.server
 
 import java.security.MessageDigest
+import sun.misc.BASE64Encoder
 
 object SHA256 {
 
-  lazy val md = MessageDigest.getInstance("SHA-256")
+  def md = MessageDigest.getInstance("SHA-256")
 
   /**
    * Performs a SHA-256 hash on a string.

@@ -19,4 +19,3 @@ case class SimpleToken(
   id: Int,
   token: String,
   expirationTime: Long)
-

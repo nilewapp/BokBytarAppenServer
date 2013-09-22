@@ -31,7 +31,7 @@ object DB {
 
   def url = "jdbc:h2:%s;USER=%s;PASSWORD=%s".format(dbPath, config.getString("user"), config.getString("pass"))
 
-  implicit val db = Database.forURL(url, driver = "org.h2.Driver")
+  def db = Database.forURL(url, driver = "org.h2.Driver")
 
   /**
    * Tables
