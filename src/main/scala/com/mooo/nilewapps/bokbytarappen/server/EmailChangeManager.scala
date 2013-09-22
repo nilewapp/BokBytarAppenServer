@@ -21,6 +21,7 @@ import Database.threadLocalSession
 import com.typesafe.config._
 
 import DB._
+import util._
 
 import data.EmailConfirmationToken
 

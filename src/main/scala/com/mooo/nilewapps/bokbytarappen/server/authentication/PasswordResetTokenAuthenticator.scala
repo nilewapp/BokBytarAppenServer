@@ -21,10 +21,10 @@ import ExecutionContext.Implicits.global
 import scala.slick.driver.H2Driver.simple._
 import Database.threadLocalSession
 
-import com.mooo.nilewapps.bokbytarappen.server._
-import data._
-import util._
-import DB._
+import com.mooo.nilewapps.bokbytarappen._
+import server.data._
+import server.util._
+import server.DB._
 
 trait PasswordResetTokenAuthenticator {
 

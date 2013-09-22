@@ -23,10 +23,10 @@ import Database.threadLocalSession
 
 import com.typesafe.config._
 
-import com.mooo.nilewapps.bokbytarappen.server._
-import data._
-import util._
-import DB._
+import com.mooo.nilewapps.bokbytarappen.server
+import server.util._
+import server.data._
+import server.DB._
 
 trait TokenAuthenticators {
 
@@ -58,8 +58,8 @@ trait TokenAuthenticators {
       lazy val seriesHash = SHA256(t.series)
       (for {
         s <- Sessions
-        if s.id        === p.id      &&
-           s.series    === seriesHash      &&
+        if s.id        === p.id &&
+           s.series    === seriesHash &&
            s.tokenHash === SHA256(t.token) &&
            s.expirationTime > currentTime
       } yield s).update(Session(p.id, seriesHash, SHA256(token), expires)) match {
@@ -77,9 +77,9 @@ trait TokenAuthenticators {
     tokenAuthenticator(credentials, (p, t) => {
       (for {
         s <- Sessions
-        if s.id        === p.id       &&
+        if s.id        === p.id &&
            s.series    === SHA256(t.series) &&
-           s.tokenHash === SHA256(t.token)  &&
+           s.tokenHash === SHA256(t.token) &&
            s.expirationTime > System.currentTimeMillis()
       } yield s).delete match {
         case 1 => Some(p)

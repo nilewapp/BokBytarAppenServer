@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mooo.nilewapps.bokbytarappen.server
+package com.mooo.nilewapps.bokbytarappen.server.validation
 
 import scala.slick.driver.H2Driver.simple._
 import Database.threadLocalSession
 
-import DB._
+import com.mooo.nilewapps.bokbytarappen.server.DB._
 
 /**
  * Defines methods to validate email addresses.

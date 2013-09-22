@@ -20,6 +20,8 @@ import Database.threadLocalSession
 
 import com.typesafe.config._
 
+import util._
+
 /**
  * Defines tables and provides database access
  */
