@@ -75,7 +75,7 @@ class EmailConfirmationTokenAuthenticatorSpec
 
     def before = { 
       query {
-        profileId = insertProfile("", "", None, Query(Universities).take(1).list.head._1)
+        profileId = insertProfile("", "", None)
         lazy val t = expiredToken(profileId, tokenString)
         updateToken(t)
       }
@@ -94,7 +94,7 @@ class EmailConfirmationTokenAuthenticatorSpec
 
     def before = { 
       query {
-        profileId = insertProfile("", "", None, Query(Universities).take(1).list.head._1)
+        profileId = insertProfile("", "", None)
         lazy val t = unexpiredToken(profileId, tokenString)
         updateToken(t)
       }

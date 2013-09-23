@@ -32,6 +32,6 @@ import server.util._
 
 class PasswordAuthenticatorSpec
   extends Specification 
-  with PasswordAuthenicator 
+  with PasswordAuthenticator 
   with NoTimeConversions {
 }
