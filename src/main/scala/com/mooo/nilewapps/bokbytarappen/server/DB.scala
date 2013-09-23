@@ -64,10 +64,8 @@ object DB {
     def passwordHash = column[String]("PASSWORD_HASH")
     def name = column[String]("NAME")
     def phoneNumber = column[Option[String]]("PHONE_NUMBER")
-    def university = column[String]("UNIVERSITY")
-    def * = id ~ email ~ passwordHash ~ name ~ phoneNumber ~ university <> (data.Profile, data.Profile.unapply _)
+    def * = id ~ email ~ passwordHash ~ name ~ phoneNumber <> (data.Profile, data.Profile.unapply _)
     def emailIndex = index("PROFILES_EMAIL_INDEX", email, unique = true)
-    def universityFK = foreignKey("UNIVERSITY_FK", university, Universities)(_.name)
   }
 
   object WantedBooks extends Table[(Int, Int)]("WANTED_BOOKS") {
@@ -106,6 +104,7 @@ object DB {
     def parent = column[Option[Int]]("PARENT")
     def * = id.? ~ name ~ owner ~ description ~ privacy ~ parent <> (data.Group, data.Group.unapply _)
     def ownerFK = foreignKey("GROUPS_OWNER_FK", owner, Profiles)(_.id)
+    def parentFK = foreignKey("GROUPS_PARENT_FK", parent, Groups)(_.id)
   }
 
   object Members extends Table[(Int, Int)]("MEMBERS") {
@@ -141,12 +140,11 @@ object DB {
   /**
    * Inserts a new profile into the database.
    */
-  def insertProfile(passwordHash: String, name: String, phoneNumber: Option[String], university: String): Int = {
+  def insertProfile(passwordHash: String, name: String, phoneNumber: Option[String]): Int = {
     (Profiles.passwordHash ~
      Profiles.name ~
-     Profiles.phoneNumber ~
-     Profiles.university) returning Profiles.id insert(
-       (passwordHash, name, phoneNumber, university))
+     Profiles.phoneNumber) returning Profiles.id insert(
+       (passwordHash, name, phoneNumber))
   }
 
   /**
@@ -178,8 +176,7 @@ object DB {
         email,
         user.passwordHash,
         user.name,
-        user.phoneNumber,
-        user.university))
+        user.phoneNumber))
   }
 
   /**
@@ -194,8 +191,7 @@ object DB {
         user.email,
         BCrypt.hashpw(password, BCrypt.gensalt()),
         user.name,
-        user.phoneNumber,
-        user.university))
+        user.phoneNumber))
   }
 
   /**

@@ -161,12 +161,12 @@ trait Service extends HttpService {
        * Registers the user.
        */
       path("register") {
-        formFields('email, 'name, 'phone ?, 'university, 'password) { (email, name, phone, university, password) =>
+        formFields('email, 'name, 'phone ?, 'password) { (email, name, phone, password) =>
           respondWithMediaType(`text/plain`) {
             (validateEmail(email) & validatePassword(password)) {
               complete {
                 val passwordHash = BCrypt.hashpw(password, BCrypt.gensalt())
-                val id = query(insertProfile(passwordHash, name, phone, university))
+                val id = query(insertProfile(passwordHash, name, phone))
                 EmailChangeManager.requestEmailChange(id, email)
                 "A confirmation email has been sent to %s!".format(email)
               }

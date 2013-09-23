@@ -20,5 +20,4 @@ case class Profile(
   email: Option[String],
   passwordHash: String,
   name: String,
-  phoneNumber: Option[String],
-  university: String)
+  phoneNumber: Option[String])
