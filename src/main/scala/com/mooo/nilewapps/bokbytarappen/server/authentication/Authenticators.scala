@@ -35,8 +35,9 @@ import spray.routing.authentication.BasicHttpAuthenticator
 /**
  * Contains a few default authenticators.
  */
-trait Authenticators extends PasswordAuthenticators
-  with TokenAuthenticators
+trait Authenticators
+  extends PasswordAuthenticator
+  with TokenAuthenticator
   with PasswordResetTokenAuthenticator
   with EmailConfirmationTokenAuthenticator {
 
