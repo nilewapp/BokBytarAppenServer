@@ -51,7 +51,7 @@ class NilewappTokenAuthenticatorSpec
       }
     }
     "reject if the authorization scheme is wrong" in {
-      Post() ~> addHeader( Authorization( GenericHttpCredentials("Wrong",
+      Post() ~> addHeader(Authorization( GenericHttpCredentials("Wrong",
           Map("email" -> "", "series" -> "", "token" -> "")))) ~> auth ~> check {
         rejection === AuthenticationFailedRejection(realm)
       }
