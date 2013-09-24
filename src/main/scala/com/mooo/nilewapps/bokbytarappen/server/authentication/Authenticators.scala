@@ -37,7 +37,7 @@ import spray.routing.authentication.BasicHttpAuthenticator
  */
 trait Authenticators
   extends PasswordAuthenticator
-  with TokenAuthenticator
+  with SessionAuthenticator
   with PasswordResetTokenAuthenticator
   with EmailConfirmationTokenAuthenticator {
 
@@ -55,13 +55,13 @@ trait Authenticators
   /**
    * Authenticates with a session Token and returns the user Profile and a new session Token.
    */
-  def authWithToken = authenticate(new NilewappTokenAuthenticator("Protected", tokenAuthenticator))
+  def authWithToken = authenticate(new NilewappTokenAuthenticator("Protected", sessionAuthenticator))
 
   /**
    * Authenticates with a session Token and returns the user Profile.
    */
   def authWithTokenNoSession =
-    authenticate(new NilewappTokenAuthenticator("Protected", tokenAuthenticatorNoSession))
+    authenticate(new NilewappTokenAuthenticator("Protected", sessionAuthenticatorNoSession))
 
   /**
    * Authenticates with a password reset token.
