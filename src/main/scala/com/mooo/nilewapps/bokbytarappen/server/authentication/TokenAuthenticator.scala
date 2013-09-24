@@ -55,8 +55,8 @@ trait TokenAuthenticator {
       lazy val seriesHash = SHA256(t.series)
       (for {
         s <- Sessions
-        if s.id        === p.id &&
-           s.series    === seriesHash &&
+        if s.id === p.id &&
+           s.seriesHash === seriesHash &&
            s.tokenHash === SHA256(t.token) &&
            s.expirationTime > currentTime
       } yield s).update(Session(p.id, seriesHash, SHA256(token), expires)) match {
@@ -74,8 +74,8 @@ trait TokenAuthenticator {
     tokenAuthenticator(credentials, (p, t) => {
       (for {
         s <- Sessions
-        if s.id        === p.id &&
-           s.series    === SHA256(t.series) &&
+        if s.id === p.id &&
+           s.seriesHash === SHA256(t.series) &&
            s.tokenHash === SHA256(t.token) &&
            s.expirationTime > System.currentTimeMillis()
       } yield s).delete match {

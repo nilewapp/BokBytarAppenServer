@@ -86,11 +86,11 @@ object DB {
 
   object Sessions extends Table[data.Session]("SESSION") {
     def id = column[Int]("PROFILE")
-    def series = column[String]("SERIES")
+    def seriesHash = column[String]("SERIES")
     def tokenHash = column[String]("TOKEN")
     def expirationTime = column[Long]("EXPIRATION_TIME")
-    def * = id ~ series ~ tokenHash ~ expirationTime <> (data.Session, data.Session.unapply _)
-    def sessionPK = primaryKey("SESSION_PK", id ~ series)
+    def * = id ~ seriesHash ~ tokenHash ~ expirationTime <> (data.Session, data.Session.unapply _)
+    def sessionPK = primaryKey("SESSION_PK", id ~ seriesHash)
     def profileFK = foreignKey("SESSION_PROFILE_FK", id, Profiles)(_.id)
   }
 

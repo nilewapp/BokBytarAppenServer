@@ -17,7 +17,6 @@ package com.mooo.nilewapps.bokbytarappen.server.data
 
 case class Session(
   id: Int,
-  series: String,
+  seriesHash: String,
   tokenHash: String,
   expirationTime: Long)
-

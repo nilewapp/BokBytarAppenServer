@@ -16,7 +16,7 @@
 package com.mooo.nilewapps.bokbytarappen.server.authentication
 
 import org.specs2.time.NoTimeConversions
-import org.specs2.mutable.{NameSpace, Specification, BeforeAfter}
+import org.specs2.mutable.{Specification, BeforeAfter}
 
 import scala.concurrent._
 import duration._
@@ -31,10 +31,10 @@ import server.data._
 import server.util._
 
 class EmailConfirmationTokenAuthenticatorSpec
-  extends Specification 
-  with EmailConfirmationTokenAuthenticator 
+  extends Specification
+  with EmailConfirmationTokenAuthenticator
   with NoTimeConversions {
-  
+
   "EmailConfirmationTokenAuthenticator" should {
     "not return a valid token if no token string is given" in {
       Await.result(emailConfirmationTokenAuthenticator(None), 10 seconds) must_== None
@@ -73,7 +73,7 @@ class EmailConfirmationTokenAuthenticatorSpec
 
   trait ExpiredTokenContext extends BeforeAfter with Context {
 
-    def before = { 
+    def before = {
       query {
         profileId = insertProfile("", "", None)
         lazy val t = expiredToken(profileId, tokenString)
@@ -92,7 +92,7 @@ class EmailConfirmationTokenAuthenticatorSpec
 
   trait ValidTokenContext extends BeforeAfter with Context {
 
-    def before = { 
+    def before = {
       query {
         profileId = insertProfile("", "", None)
         lazy val t = unexpiredToken(profileId, tokenString)
