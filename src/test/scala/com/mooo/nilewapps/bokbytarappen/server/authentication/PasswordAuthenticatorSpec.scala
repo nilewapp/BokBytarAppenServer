@@ -71,7 +71,7 @@ class PasswordAuthenticatorSpec
           email must_== tokenEmail
           query {
             val seriesHash = SHA256(series)
-            Query(Sessions).filter(q => q.id === id && q.series === seriesHash).list match {
+            Query(Sessions).filter(q => q.id === id && q.seriesHash === seriesHash).list match {
               case result: List[S] =>
                 result.length must_== 1
                 result.head.id must_== id

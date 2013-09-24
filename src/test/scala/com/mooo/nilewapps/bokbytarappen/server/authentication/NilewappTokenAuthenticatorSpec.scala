@@ -27,7 +27,7 @@ import HttpHeaders._
 
 import com.mooo.nilewapps.bokbytarappen.server.data.Token
 
-class NilewappTokenAuthenticatorSpec 
+class NilewappTokenAuthenticatorSpec
   extends Specification
   with Specs2RouteTest {
 
@@ -59,15 +59,15 @@ class NilewappTokenAuthenticatorSpec
     "reject if the correct parameters aren't in the header" in {
       Post() ~> addHeader(Authorization(GenericHttpCredentials("Nilewapp",
         Map("email" -> "", "series" -> "")))) ~> auth ~> check {
-        rejection === AuthenticationFailedRejection(realm) 
+        rejection === AuthenticationFailedRejection(realm)
       }
       Post() ~> addHeader(Authorization(GenericHttpCredentials("Nilewapp",
         Map("email" -> "", "token" -> "")))) ~> auth ~> check {
-        rejection === AuthenticationFailedRejection(realm) 
+        rejection === AuthenticationFailedRejection(realm)
       }
       Post() ~> addHeader(Authorization(GenericHttpCredentials("Nilewapp",
         Map("series" -> "", "token" -> "")))) ~> auth ~> check {
-        rejection === AuthenticationFailedRejection(realm) 
+        rejection === AuthenticationFailedRejection(realm)
       }
     }
     "return the result of the authenticator if a correct authorization header is given" in {
