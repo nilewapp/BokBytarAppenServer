@@ -34,7 +34,7 @@ trait SessionAuthenticator {
    * Excutes a method on a token and the profile that the token belongs to.
    */
   def sessionAuthenticator[U](credentials: Option[Token], f: (Profile, Token) => Option[U]): Future[Option[U]] = future {
-    query  {
+    query {
       (for {
         t <- credentials
         p <- getProfile(t.email)
