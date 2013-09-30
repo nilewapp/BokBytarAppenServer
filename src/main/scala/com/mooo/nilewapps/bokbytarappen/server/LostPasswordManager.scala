@@ -33,14 +33,13 @@ object LostPasswordManager {
    */
   def requestResetToken(email: String): Option[String] = query {
     
-    lazy val tokenString = SecureString()
-
     def expirationTime = System.currentTimeMillis() +
       ConfigFactory.load().getMilliseconds("password-reset.expiration-time")
 
     for {
       profile <- getProfile(email)
 
+      tokenString = SecureString()
       token = SimpleToken(profile.id, SHA256(tokenString), expirationTime)
 
       if Query(PasswordResetTokens).filter(q => q.id === profile.id).update(token) == 1 ||

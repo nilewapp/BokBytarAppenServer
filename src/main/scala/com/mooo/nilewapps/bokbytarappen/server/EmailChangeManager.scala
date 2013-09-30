@@ -42,7 +42,6 @@ object EmailChangeManager {
    */
   def requestEmailConfirmationToken(id: Int, email: String): Option[String] = query {
 
-    lazy val tokenString = SecureString()
 
     def expirationTime = System.currentTimeMillis() +
       ConfigFactory.load().getMilliseconds("email-confirmation.expiration-time")
@@ -50,6 +49,7 @@ object EmailChangeManager {
     for {
       profile <- getProfile(id)
 
+      tokenString = SecureString()
       token = EmailConfirmationToken(profile.id, SHA256(tokenString), email, expirationTime)
 
       if Query(EmailConfirmationTokens).filter(_.id === profile.id).update(token) == 1 ||

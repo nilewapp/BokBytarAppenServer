@@ -15,12 +15,15 @@
  */
 package com.mooo.nilewapps.bokbytarappen.server
 
-import scala.slick.driver.H2Driver.simple._
-import Database.threadLocalSession
+import com.mooo.nilewapps.bokbytarappen.server.util._
+import com.mooo.nilewapps.bokbytarappen.server.data.GroupPrivacy._
 
 import com.typesafe.config._
 
-import util._
+import scala.slick.driver.H2Driver.simple._
+import Database.threadLocalSession
+
+import java.sql.Clob
 
 /**
  * Defines tables and provides database access
@@ -94,15 +97,15 @@ object DB {
     def profileFK = foreignKey("SESSION_PROFILE_FK", id, Profiles)(_.id)
   }
 
-  import data.GroupPrivacy._
   object Groups extends Table[data.Group]("GROUPS") {
     def id = column[Int]("ID", O.AutoInc, O.PrimaryKey)
     def name = column[String]("NAME")
     def owner = column[Int]("OWNER")
-    def description = column[String]("DESCRIPTION")
+    def description = column[Clob]("DESCRIPTION")
     def privacy = column[data.GroupPrivacy]("PRIVACY")
     def parent = column[Option[Int]]("PARENT")
-    def * = id.? ~ name ~ owner ~ description ~ privacy ~ parent <> (data.Group, data.Group.unapply _)
+    def * = id ~ name ~ owner ~ description ~ privacy ~ parent <> (data.Group, data.Group.unapply _)
+    def forInsert = name ~ owner ~ description ~ privacy ~ parent
     def ownerFK = foreignKey("GROUPS_OWNER_FK", owner, Profiles)(_.id)
     def parentFK = foreignKey("GROUPS_PARENT_FK", parent, Groups)(_.id)
   }
@@ -145,6 +148,15 @@ object DB {
      Profiles.name ~
      Profiles.phoneNumber) returning Profiles.id insert(
        (passwordHash, name, phoneNumber))
+  }
+
+  /**
+   * Inserts a new group into the database.
+   */
+  def insertGroup(name: String, owner: Int, description: String, privacy: data.GroupPrivacy, parent: Option[Int]): Int = {
+    val clob = threadLocalSession.conn.createClob()
+    clob.setString(1, description)
+    Groups.forInsert returning Groups.id insert((name, owner, clob, privacy, parent))
   }
 
   /**
@@ -206,5 +218,3 @@ object DB {
   def getProfile(email: String): Option[data.Profile] =
     Query(Profiles).filter(_.email === email).take(1).list.headOption
 }
-
-

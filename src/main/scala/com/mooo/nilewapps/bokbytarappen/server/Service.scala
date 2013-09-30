@@ -46,6 +46,7 @@ import validation._
 import DB._
 import authentication.Authenticators._
 import data._
+import GroupPrivacy._
 import TokenJsonProtocol._
 
 /**
@@ -280,6 +281,21 @@ trait Service extends HttpService {
           complete {
             query(deleteSessionData(user.id))
             SessMess(None, "Your session data has been deleted!")
+          }
+        }
+      }
+    } ~
+    /**
+     * Creates a group
+     */
+    path("create-group") {
+      (authWithToken | authWithPass) { case (user, session) =>
+        formFields('name, 'description, 'privacy.as[GroupPrivacy], 'parent.as[Int] ?) { (name, description, privacy, parent) =>
+          authorize(user.isMemberOf(parent)) {
+            complete {
+              val id = query(insertGroup(name, user.id, description, privacy, parent))
+              SessMess(Some(session), "Created group %s".format(name))
+            }
           }
         }
       }

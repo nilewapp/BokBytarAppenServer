@@ -15,9 +15,23 @@
  */
 package com.mooo.nilewapps.bokbytarappen.server.data
 
+import com.mooo.nilewapps.bokbytarappen.server.DB._
+
+import scala.slick.driver.H2Driver.simple._
+import Database.threadLocalSession
+
 case class Profile(
   id: Int,
   email: Option[String],
   passwordHash: String,
   name: String,
-  phoneNumber: Option[String])
+  phoneNumber: Option[String]) {
+
+  def isMemberOf(groupId: Option[Int]): Boolean = query {
+    groupId match {
+      case Some(i) =>
+        Query(Members).filter(q => q.group === i && q.profile === id).list.length == 1
+      case None => true
+    }
+  }
+}

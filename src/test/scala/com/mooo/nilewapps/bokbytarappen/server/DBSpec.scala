@@ -15,9 +15,15 @@
  */
 package com.mooo.nilewapps.bokbytarappen.server
 
-import org.specs2.mutable.Specification
+import com.mooo.nilewapps.bokbytarappen.server.DB._
+import com.mooo.nilewapps.bokbytarappen.server.data._
 
 import com.typesafe.config._
+
+import org.specs2.mutable.{BeforeAfter, Specification}
+
+import scala.slick.driver.H2Driver.simple._
+import Database.threadLocalSession
 
 class DBSpec extends Specification {
   
@@ -26,4 +32,64 @@ class DBSpec extends Specification {
       ConfigFactory.load().getString("db.name") must_== "test"
     }
   }
+  "DB" should {
+    "be able to insert groups with no parents" in new Context {
+      query {
+        val groups = Query(Groups).filter(_.id === groupId).list
+        groups must be size(1)
+        val h = groups.head
+        h.id must_== groupId
+        h.name must_== "Name"
+        h.owner must_== profileId
+        h.description.getSubString(1, h.description.length.toInt) must_== "Description"
+        h.privacy must_== Public
+        h.parent must_== None
+      }
+    }
+    "be able to insert groups with a parent" in new ChildContext {
+      query {
+        val groups = Query(Groups).filter(_.id === childId).list
+        groups must be size(1)
+        val h = groups.head
+        h.id must_== childId
+        h.name must_== "Child"
+        h.owner must_== profileId
+        h.description.getSubString(1, h.description.length.toInt) must_== "Child description"
+        h.privacy must_== Public
+        h.parent must_== Some(groupId)
+      }
+    }
+  }
+
+  trait Context extends BeforeAfter {
+
+    var profileId: Int = -1
+    var groupId: Int = -1
+
+    def before = query {
+      profileId = insertProfile("", "", None)
+      groupId = insertGroup("Name", profileId, "Description", Public, None)
+    }
+
+    def after = query {
+      Query(Groups).filter(_.id === groupId).delete
+      Query(Profiles).filter(_.id === profileId).delete
+    }
+  }
+
+  trait ChildContext extends Context {
+
+    var childId: Int = -1
+
+    override def before = {
+      super.before
+      childId = query(insertGroup("Child", profileId, "Child description", Public, Some(groupId)))
+    }
+
+    override def after = {
+      query(Query(Groups).filter(_.id === childId).delete)
+      super.after
+    }
+  }
+
 }
