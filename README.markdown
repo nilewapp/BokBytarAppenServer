@@ -12,7 +12,6 @@ Follow these steps to get started:
 
         $ cd BokBytarAppenServer
 
-
 3. Copy [application.conf.example](/src/main/resources/application.conf.example) to `/src/main/resources/application.conf`
 
         $ cp ./src/main/resources/application.conf.example ./src/main/resources/application.conf
@@ -21,16 +20,44 @@ Follow these steps to get started:
 
         $ sbt
 
-5. Start the application:
+5. Launch the scala console and initialize the database:
+
+        > console
+        scala> com.mooo.nilewapps.bokbytarappen.server.DBManager.init
+        scala> :quit
+
+6. Start the application:
 
         > re-start
 
-6. Access the application at `https://localhost:8443/<service from Service.scala>`
+7. Access the application at `https://localhost:8443/<service from Service.scala>`
 in any web browser.
 
-7. Stop the application:
+8. Stop the application:
 
         > re-stop
+
+### Running tests
+
+Some tests are dependent on a test database. The instructions below explains how to do this.
+
+1. Copy [application.conf.example](/src/main/resources/application.conf.example) to `/src/test/resources/application.conf`
+
+        $ cp ./src/main/resources/application.conf.example ./src/main/resources/application.conf
+
+2. Launch SBT
+
+        $ sbt
+
+3. Launch the scala test console and initialize the database:
+
+        > test:console
+        scala> com.mooo.nilewapps.bokbytarappen.server.DBManager.init
+        scala> :quit
+
+4. After this initial setup is done, the tests can be executed:
+
+        > test
 
 ### Using the Server with the app
 
