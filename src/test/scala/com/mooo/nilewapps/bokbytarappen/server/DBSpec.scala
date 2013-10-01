@@ -26,7 +26,7 @@ import scala.slick.driver.H2Driver.simple._
 import Database.threadLocalSession
 
 class DBSpec extends Specification {
-  
+
   "This test" should {
     "load configuration file from the test directory" in {
       ConfigFactory.load().getString("db.name") must_== "test"
@@ -91,5 +91,4 @@ class DBSpec extends Specification {
       super.after
     }
   }
-
 }

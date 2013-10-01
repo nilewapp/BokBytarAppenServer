@@ -20,7 +20,7 @@ import org.specs2.mutable.Specification
 import com.typesafe.config._
 
 class EmailChangeManageSpec extends Specification {
-  
+
   "EmailChangeManagerSpec" should {
   }
 }

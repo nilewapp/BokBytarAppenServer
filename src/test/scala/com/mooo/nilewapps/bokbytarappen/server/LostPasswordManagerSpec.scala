@@ -20,7 +20,7 @@ import org.specs2.mutable.Specification
 import com.typesafe.config._
 
 class LostPasswordManagerSpec extends Specification {
-  
+
   "LostPasswordManagerSpec" should {
     "return a token upon request" in {
     }

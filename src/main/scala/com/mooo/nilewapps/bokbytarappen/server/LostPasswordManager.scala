@@ -32,7 +32,7 @@ object LostPasswordManager {
    * the given email address is registered. Replaces any old token.
    */
   def requestResetToken(email: String): Option[String] = query {
-    
+
     def expirationTime = System.currentTimeMillis() +
       ConfigFactory.load().getMilliseconds("password-reset.expiration-time")
 

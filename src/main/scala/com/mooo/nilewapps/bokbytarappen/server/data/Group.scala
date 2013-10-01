@@ -55,7 +55,7 @@ object GroupPrivacy {
       Left(MalformedContent("'%s' is not a valid group privacy value".format(value)))
   }
 
-  implicit val GroupPrivacyTypeMapper = MappedTypeMapper.base[GroupPrivacy, Int]({ 
+  implicit val GroupPrivacyTypeMapper = MappedTypeMapper.base[GroupPrivacy, Int]({
       _ match {
         case Secret => 0
         case Closed => 1

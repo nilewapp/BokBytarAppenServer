@@ -55,7 +55,7 @@ class NilewappTokenAuthenticator[U](
   def authenticate(credentials: Option[HttpCredentials]) = {
     authenticator {
       credentials.flatMap {
-        case GenericHttpCredentials("Nilewapp", params) => 
+        case GenericHttpCredentials("Nilewapp", params) =>
           val de = new sun.misc.BASE64Decoder()
           val t = params.mapValues(v => new String(de.decodeBuffer(v)))
           for {

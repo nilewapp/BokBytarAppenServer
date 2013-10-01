@@ -23,7 +23,7 @@ import com.typesafe.config._
 import com.mooo.nilewapps.bokbytarappen.server.ServiceActor
 
 /**
- *  Starts the server 
+ *  Starts the server
  */
 object Boot extends App with SprayCanHttpServerApp with SslConfig {
 

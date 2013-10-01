@@ -41,7 +41,7 @@ object PasswordValidator {
         case Some(_) => i
         case None => 0
       }
-    
+
     def log2(a: Double) = Math.log(a) / Math.log(2)
 
     log2(chars("""[a-z]""", 26) +
