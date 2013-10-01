@@ -15,8 +15,9 @@
  */
 package com.mooo.nilewapps.bokbytarappen.server.util
 
-import java.security.SecureRandom
 import java.math.BigInteger
+import java.security.SecureRandom
+
 import sun.misc.BASE64Encoder
 
 object SecureString {

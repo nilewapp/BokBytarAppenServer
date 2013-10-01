@@ -15,10 +15,9 @@
  */
 package com.mooo.nilewapps.bokbytarappen.server.util
 
-import javax.mail.{Transport, PasswordAuthentication, Message}
-import javax.mail.internet._
-
 import java.util.Properties
+import javax.mail.internet._
+import javax.mail.{Transport, PasswordAuthentication, Message}
 
 import com.typesafe.config._
 

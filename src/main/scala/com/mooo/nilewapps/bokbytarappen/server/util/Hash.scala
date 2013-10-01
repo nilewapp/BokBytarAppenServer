@@ -16,6 +16,7 @@
 package com.mooo.nilewapps.bokbytarappen.server.util
 
 import java.security.MessageDigest
+
 import sun.misc.BASE64Encoder
 
 object SHA256 {

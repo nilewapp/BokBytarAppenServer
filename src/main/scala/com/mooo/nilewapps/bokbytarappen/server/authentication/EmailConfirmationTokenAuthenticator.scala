@@ -16,7 +16,7 @@
 package com.mooo.nilewapps.bokbytarappen.server.authentication
 
 import scala.concurrent._
-import ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.slick.driver.H2Driver.simple._
 import Database.threadLocalSession

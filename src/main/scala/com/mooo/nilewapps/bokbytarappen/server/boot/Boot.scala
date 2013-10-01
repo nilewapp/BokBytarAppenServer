@@ -15,10 +15,9 @@
  */
 package com.mooo.nilewapps.bokbytarappen.server.boot
 
-import spray.can.server.SprayCanHttpServerApp
 import akka.actor.Props
-
 import com.typesafe.config._
+import spray.can.server.SprayCanHttpServerApp
 
 import com.mooo.nilewapps.bokbytarappen.server.ServiceActor
 

@@ -15,10 +15,10 @@
  */
 package com.mooo.nilewapps.bokbytarappen.server.data
 
-import com.mooo.nilewapps.bokbytarappen.server.DB._
-
-import scala.slick.driver.H2Driver.simple._
+import slick.driver.H2Driver.simple._
 import Database.threadLocalSession
+
+import com.mooo.nilewapps.bokbytarappen.server.DB._
 
 case class Profile(
   id: Int,

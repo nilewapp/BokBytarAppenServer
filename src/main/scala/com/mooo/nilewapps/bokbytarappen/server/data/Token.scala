@@ -15,6 +15,9 @@
  */
 package com.mooo.nilewapps.bokbytarappen.server.data
 
+import spray.json.DefaultJsonProtocol
+import DefaultJsonProtocol._
+
 /**
  * Defines the session object that is sent to the user
  * for future authentication.
@@ -24,9 +27,6 @@ case class Token(
   series: String,
   token: String,
   expirationTime: Option[Long])
-
-import spray.json.DefaultJsonProtocol
-import DefaultJsonProtocol._
 
 object TokenJsonProtocol extends DefaultJsonProtocol {
   implicit val TokenFormat = jsonFormat4(Token)

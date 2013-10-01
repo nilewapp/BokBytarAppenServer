@@ -16,11 +16,11 @@
 package com.mooo.nilewapps.bokbytarappen.server.authentication
 
 import scala.concurrent.{ExecutionContext, Future}
-import spray._
-import routing._
-import authentication._
-import http._
-import httpx.unmarshalling._
+
+import spray.http._
+import spray.httpx.unmarshalling._
+import spray.routing._
+import spray.routing.authentication._
 
 class SimpleTokenAuthenticator[U](
     val realm: String,

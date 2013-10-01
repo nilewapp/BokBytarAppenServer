@@ -18,7 +18,6 @@ package com.mooo.nilewapps.bokbytarappen.server.data
 import java.sql.Clob
 
 import slick.lifted.MappedTypeMapper
-
 import spray.httpx.unmarshalling.{DeserializationError, Deserializer, MalformedContent}
 
 case class Group(

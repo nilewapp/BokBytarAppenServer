@@ -16,17 +16,15 @@
 package com.mooo.nilewapps.bokbytarappen.server.authentication
 
 import scala.concurrent._
-import ExecutionContext.Implicits.global
-
-import scala.slick.driver.H2Driver.simple._
-import Database.threadLocalSession
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import com.typesafe.config._
+import slick.driver.H2Driver.simple._
+import Database.threadLocalSession
 
-import com.mooo.nilewapps.bokbytarappen.server
-import server.util._
-import server.data._
-import server.DB._
+import com.mooo.nilewapps.bokbytarappen.server.data._
+import com.mooo.nilewapps.bokbytarappen.server.DB._
+import com.mooo.nilewapps.bokbytarappen.server.util._
 
 trait SessionAuthenticator {
 

@@ -17,6 +17,7 @@ package com.mooo.nilewapps.bokbytarappen.server.boot
 
 import java.security.{SecureRandom, KeyStore}
 import javax.net.ssl.{KeyManagerFactory, SSLContext, TrustManagerFactory}
+
 import spray.io._
 
 import com.typesafe.config._
