@@ -15,9 +15,8 @@
  */
 package com.mooo.nilewapps.bokbytarappen.server
 
-import org.specs2.mutable.Specification
-
 import com.typesafe.config._
+import org.specs2.mutable.Specification
 
 class LostPasswordManagerSpec extends Specification {
 

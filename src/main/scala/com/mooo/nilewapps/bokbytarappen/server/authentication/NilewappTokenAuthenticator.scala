@@ -18,12 +18,11 @@ package com.mooo.nilewapps.bokbytarappen.server.authentication
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.parsing.combinator._
 
-import spray._
-import routing._
-import authentication._
-import http._
+import spray.http._
+import spray.http.HttpHeaders._
+import spray.routing._
+import spray.routing.authentication._
 import spray.util._
-import HttpHeaders._
 
 import com.mooo.nilewapps.bokbytarappen.server.data._
 

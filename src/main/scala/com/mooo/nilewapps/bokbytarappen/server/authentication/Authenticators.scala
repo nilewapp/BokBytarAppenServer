@@ -17,20 +17,18 @@ package com.mooo.nilewapps.bokbytarappen.server.authentication
 
 import scala.concurrent._
 import ExecutionContext.Implicits.global
-import spray.routing.authentication.UserPass
+
+import spray.routing.authentication.{BasicHttpAuthenticator, UserPass}
+import spray.routing.Directives.authenticate
 
 import scala.slick.driver.H2Driver.simple._
 import Database.threadLocalSession
 
 import com.typesafe.config._
 
-import com.mooo.nilewapps.bokbytarappen.server
-import server.data._
-import server.util._
-import server.DB._
-
-import spray.routing.Directives.authenticate
-import spray.routing.authentication.BasicHttpAuthenticator
+import com.mooo.nilewapps.bokbytarappen.server.data._
+import com.mooo.nilewapps.bokbytarappen.server.DB._
+import com.mooo.nilewapps.bokbytarappen.server.util._
 
 /**
  * Contains a few default authenticators.

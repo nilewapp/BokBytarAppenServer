@@ -17,20 +17,20 @@ package com.mooo.nilewapps.bokbytarappen.server
 
 import javax.net.ssl.SSLException
 
-import scala.concurrent.duration._
 import akka.actor.Actor
+import scala.concurrent.duration._
 
-import spray.util.LoggingContext
-import spray.routing._
-import spray.routing.authentication._
 import spray.http._
 import spray.http.StatusCodes._
 import spray.httpx.marshalling._
 import spray.httpx.SprayJsonSupport
+import spray.routing._
+import spray.routing.authentication._
+import spray.util.LoggingContext
 
+import MediaTypes._
 import spray.json.DefaultJsonProtocol
 import SprayJsonSupport._
-import MediaTypes._
 
 import scala.slick.driver.H2Driver.simple._
 import Database.threadLocalSession
@@ -41,13 +41,13 @@ import scala.language.postfixOps
 
 import com.typesafe.config._
 
-import util._
-import validation._
-import DB._
-import authentication.Authenticators._
-import data._
-import GroupPrivacy._
-import TokenJsonProtocol._
+import com.mooo.nilewapps.bokbytarappen.server.authentication.Authenticators._
+import com.mooo.nilewapps.bokbytarappen.server.data._
+import com.mooo.nilewapps.bokbytarappen.server.data.GroupPrivacy._
+import com.mooo.nilewapps.bokbytarappen.server.data.TokenJsonProtocol._
+import com.mooo.nilewapps.bokbytarappen.server.DB._
+import com.mooo.nilewapps.bokbytarappen.server.util._
+import com.mooo.nilewapps.bokbytarappen.server.validation._
 
 /**
  * Actor that runs the service.

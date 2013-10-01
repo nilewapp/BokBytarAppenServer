@@ -15,15 +15,14 @@
  */
 package com.mooo.nilewapps.bokbytarappen.server.authentication
 
-import org.specs2.mutable.Specification
-
 import scala.concurrent._
 
-import spray.testkit.Specs2RouteTest
+import org.specs2.mutable.Specification
 import spray.http._
+import spray.http.HttpHeaders._
 import spray.routing._
 import spray.routing.Directives._
-import HttpHeaders._
+import spray.testkit.Specs2RouteTest
 
 import com.mooo.nilewapps.bokbytarappen.server.data.Token
 

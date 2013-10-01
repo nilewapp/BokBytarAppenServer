@@ -15,15 +15,14 @@
  */
 package com.mooo.nilewapps.bokbytarappen.server
 
-import com.mooo.nilewapps.bokbytarappen.server.DB._
-import com.mooo.nilewapps.bokbytarappen.server.data._
-
-import com.typesafe.config._
-
-import org.specs2.mutable.{BeforeAfter, Specification}
-
 import scala.slick.driver.H2Driver.simple._
 import Database.threadLocalSession
+
+import com.typesafe.config._
+import org.specs2.mutable.{BeforeAfter, Specification}
+
+import com.mooo.nilewapps.bokbytarappen.server.data._
+import com.mooo.nilewapps.bokbytarappen.server.DB._
 
 class DBSpec extends Specification {
 

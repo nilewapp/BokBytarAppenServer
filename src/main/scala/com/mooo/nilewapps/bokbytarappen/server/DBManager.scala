@@ -18,7 +18,7 @@ package com.mooo.nilewapps.bokbytarappen.server
 import scala.slick.driver.H2Driver.simple._
 import Database.threadLocalSession
 
-import DB._
+import com.mooo.nilewapps.bokbytarappen.server.DB._
 
 /**
  * Provides some utilities for creating and managing the database

@@ -15,15 +15,15 @@
  */
 package com.mooo.nilewapps.bokbytarappen.server
 
-import com.mooo.nilewapps.bokbytarappen.server.util._
-import com.mooo.nilewapps.bokbytarappen.server.data.GroupPrivacy._
-
-import com.typesafe.config._
+import java.sql.Clob
 
 import scala.slick.driver.H2Driver.simple._
 import Database.threadLocalSession
 
-import java.sql.Clob
+import com.typesafe.config._
+
+import com.mooo.nilewapps.bokbytarappen.server.data.GroupPrivacy._
+import com.mooo.nilewapps.bokbytarappen.server.util._
 
 /**
  * Defines tables and provides database access

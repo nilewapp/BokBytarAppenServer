@@ -16,19 +16,17 @@
 package com.mooo.nilewapps.bokbytarappen.server.authentication
 
 import scala.concurrent._
-import duration._
+import scala.concurrent.duration._
 import ExecutionContext.Implicits.global
 
 import org.specs2.time.NoTimeConversions
 import org.specs2.mutable.{Specification, BeforeAfter}
-
 import scala.slick.driver.H2Driver.simple._
 import Database.threadLocalSession
 
-import com.mooo.nilewapps.bokbytarappen.server
-import server.data.{Token, Profile, Session => S}
-import server.DB._
-import server.util._
+import com.mooo.nilewapps.bokbytarappen.server.data.{Token, Profile, Session => S}
+import com.mooo.nilewapps.bokbytarappen.server.DB._
+import com.mooo.nilewapps.bokbytarappen.server.util._
 
 class SessionAuthenticatorSpec
   extends Specification
