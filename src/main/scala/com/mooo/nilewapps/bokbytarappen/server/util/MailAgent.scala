@@ -44,8 +44,10 @@ object MailAgent {
     props.put("mail.smtp.host", config.getString("smtp-host"))
     props.put("mail.smtp.port", config.getString("port"))
 
-    val session = javax.mail.Session.getInstance(props, new javax.mail.Authenticator() {
-        override def getPasswordAuthentication() = new PasswordAuthentication(from, pass)
+    val session = javax.mail.Session.getInstance(props,
+      new javax.mail.Authenticator() {
+        override def getPasswordAuthentication() =
+          new PasswordAuthentication(from, pass)
       })
 
     val mess= new MimeMessage(session)

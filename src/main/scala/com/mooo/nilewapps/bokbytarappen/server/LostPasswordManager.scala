@@ -42,7 +42,8 @@ object LostPasswordManager {
       tokenString = SecureString()
       token = SimpleToken(profile.id, SHA256(tokenString), expirationTime)
 
-      if Query(PasswordResetTokens).filter(q => q.id === profile.id).update(token) == 1 ||
+      if Query(PasswordResetTokens)
+          .filter(q => q.id === profile.id).update(token) == 1 ||
          PasswordResetTokens.insert(token) == 1
 
     } yield tokenString

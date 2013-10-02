@@ -31,7 +31,9 @@ trait SessionAuthenticator {
   /**
    * Excutes a method on a token and the profile that the token belongs to.
    */
-  def sessionAuthenticator[U](credentials: Option[Token], f: (Profile, Token) => Option[U]): Future[Option[U]] = future {
+  def sessionAuthenticator[U](
+      credentials: Option[Token],
+      f: (Profile, Token) => Option[U]): Future[Option[U]] = future {
     query {
       (for {
         t <- credentials
@@ -45,12 +47,19 @@ trait SessionAuthenticator {
   /**
    * Takes a token, checks its validity, returns the profile the token belongs to and a new Session.
    */
-  def sessionAuthenticator(credentials: Option[Token]): Future[Option[(Profile, Token)]] = {
+  def sessionAuthenticator(
+      credentials: Option[Token]): Future[Option[(Profile, Token)]] = {
     sessionAuthenticator(credentials, (p, t) => {
+
       lazy val token = SecureString()
+
       lazy val currentTime = System.currentTimeMillis()
-      lazy val expires = currentTime + ConfigFactory.load().getMilliseconds("session.expiration-time")
+
+      lazy val expires = currentTime +
+        ConfigFactory.load().getMilliseconds("session.expiration-time")
+
       lazy val seriesHash = SHA256(t.series)
+
       (for {
         s <- Sessions
         if s.id === p.id &&
@@ -68,7 +77,8 @@ trait SessionAuthenticator {
    * Takes a token, checks its validity, deletes the token and returns
    * the profile the token belongs to.
    */
-  def sessionAuthenticatorNoSession(credentials: Option[Token]): Future[Option[Profile]] = {
+  def sessionAuthenticatorNoSession(
+      credentials: Option[Token]): Future[Option[Profile]] = {
     sessionAuthenticator(credentials, (p, t) => {
       (for {
         s <- Sessions

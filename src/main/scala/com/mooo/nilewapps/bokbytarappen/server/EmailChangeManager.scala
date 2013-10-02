@@ -40,7 +40,9 @@ object EmailChangeManager {
   /**
    * Creates an email confirmation token limited to one per account.
    */
-  def requestEmailConfirmationToken(id: Int, email: String): Option[String] = query {
+  def requestEmailConfirmationToken(
+      id: Int,
+      email: String): Option[String] = query {
 
 
     def expirationTime = System.currentTimeMillis() +
@@ -50,24 +52,30 @@ object EmailChangeManager {
       profile <- getProfile(id)
 
       tokenString = SecureString()
-      token = EmailConfirmationToken(profile.id, SHA256(tokenString), email, expirationTime)
+      token = EmailConfirmationToken(
+        profile.id, SHA256(tokenString), email, expirationTime)
 
-      if Query(EmailConfirmationTokens).filter(_.id === profile.id).update(token) == 1 ||
+      if Query(EmailConfirmationTokens)
+          .filter(_.id === profile.id).update(token) == 1 ||
          EmailConfirmationTokens.insert(token) == 1
 
     } yield tokenString
   }
 
   /**
-   * Creates an email confirmation token and sends to the given address for confirmation.
+   * Creates an email confirmation token and sends to the given address
+   * for confirmation.
    */
-  def requestEmailChange(id: Int, email: String) = requestEmailConfirmationToken(id, email) match {
-    case Some(token) => MailAgent.send(
-      email,
-      "Email confirmation link",
-      "Hello,\n\nTo confirm your email address and complete your registration, please click the link below:\n\n" +
-      ConfigFactory.load().getString("http-server.domain") +
-      "/confirm-email/" + token + "\n\nMany thanks,\nRobert")
-    case _ =>
+  def requestEmailChange(id: Int, email: String) = {
+    requestEmailConfirmationToken(id, email) match {
+      case Some(token) => MailAgent.send(
+        email,
+        "Email confirmation link",
+        "Hello,\n\nTo confirm your email address and complete your registration, " +
+        "please click the link below:\n\n" +
+        ConfigFactory.load().getString("http-server.domain") +
+        "/confirm-email/" + token + "\n\nMany thanks,\nRobert")
+      case _ =>
+    }
   }
 }

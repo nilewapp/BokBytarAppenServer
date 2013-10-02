@@ -33,8 +33,9 @@ class NilewappTokenAuthenticatorSpec
   val realm = "Protected"
 
   def auth = {
-    authenticate(new NilewappTokenAuthenticator(realm, { t => future { t } })) { t =>
-      complete(t.toString)
+    authenticate(
+      new NilewappTokenAuthenticator( realm, { t => future { t } })) {
+      t => complete(t.toString)
     }
   }
 
@@ -51,7 +52,8 @@ class NilewappTokenAuthenticatorSpec
     }
     "reject if the authorization scheme is wrong" in {
       Post() ~> addHeader(Authorization( GenericHttpCredentials("Wrong",
-          Map("email" -> "", "series" -> "", "token" -> "")))) ~> auth ~> check {
+          Map("email" -> "", "series" -> "", "token" -> "")))) ~>
+        auth ~> check {
         rejection === AuthenticationFailedRejection(realm)
       }
     }
@@ -71,8 +73,11 @@ class NilewappTokenAuthenticatorSpec
     }
     "return the result of the authenticator if a correct authorization header is given" in {
       Post() ~> addHeader(Authorization(GenericHttpCredentials("Nilewapp",
-        Map("email" -> encode("value1"), "series" -> encode("value2"), "token" -> encode("value3"))))) ~> auth ~> check {
-        entityAs[String] must_== Token("value1", "value2", "value3", None).toString
+        Map("email" -> encode("value1"),
+          "series" -> encode("value2"),
+          "token" -> encode("value3"))))) ~> auth ~> check {
+        entityAs[String] must_==
+          Token("value1", "value2", "value3", None).toString
       }
     }
   }

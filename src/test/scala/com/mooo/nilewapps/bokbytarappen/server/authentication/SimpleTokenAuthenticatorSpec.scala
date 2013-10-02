@@ -31,8 +31,8 @@ class SimpleTokenAuthenticatorSpec
   val realm = "Protected"
 
   def auth = {
-    authenticate(new SimpleTokenAuthenticator(realm, { t => future { t } })) { t =>
-      complete(t.toString)
+    authenticate(new SimpleTokenAuthenticator(realm, t => future { t })) {
+      t => complete(t.toString)
     }
   }
 

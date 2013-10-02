@@ -24,7 +24,10 @@ import com.mooo.nilewapps.bokbytarappen.server.ServiceActor
 /**
  *  Starts the server
  */
-object Boot extends App with SprayCanHttpServerApp with SslConfig {
+object Boot
+    extends App
+    with SprayCanHttpServerApp
+    with SslConfig {
 
   /* Create and start the service actor */
   val service = system.actorOf(Props[ServiceActor], "handler")
@@ -32,6 +35,8 @@ object Boot extends App with SprayCanHttpServerApp with SslConfig {
   val config = ConfigFactory.load().getConfig("http-server")
 
   /* Create and bind the http server */
-  newHttpServer(service) ! Bind(interface = config.getString("interface"), port = config.getInt("port"))
+  newHttpServer(service) ! Bind(
+      interface = config.getString("interface"),
+      port = config.getInt("port"))
 
 }

@@ -30,7 +30,8 @@ case class Profile(
   def isMemberOf(groupId: Option[Int]): Boolean = query {
     groupId match {
       case Some(i) =>
-        Query(Members).filter(q => q.group === i && q.profile === id).list.length == 1
+        Query(Members).filter(q =>
+          q.group === i && q.profile === id).list.length == 1
       case None => true
     }
   }

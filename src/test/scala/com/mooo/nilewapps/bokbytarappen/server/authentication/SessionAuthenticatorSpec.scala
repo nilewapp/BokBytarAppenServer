@@ -33,53 +33,86 @@ class SessionAuthenticatorSpec
   with SessionAuthenticator
   with NoTimeConversions {
 
-  def auth(c: Option[Token]) = sessionAuthenticator(c, (p, t) => Some((p, t)))
+  def auth(c: Option[Token]) =
+    sessionAuthenticator(c, (p, t) => Some((p, t)))
 
   "SessionAuthenticator" should {
     "return None if no token is given" in {
       Await.result(auth(None), 10 seconds) must_== None
     }
     "return None if a token belonging to an unregistered email address is given" in {
-      Await.result(auth(Some(Token("", "", "", None))), 10 seconds) must_== None
+      Await.result(
+        auth(Some(Token("", "", "", None))), 10 seconds) must_== None
     }
-    "return the result of the method parameter if a token belonging to a registered user is given" in new ProfileContext {
-      Await.result(auth(Some(Token(email, "", "", None))), 10 seconds) must_==
-        Some((Profile(profileId, Some(email), "", "", None), Token(email, "", "", None)))
+    "return the result of the method parameter if a token belonging to a registered user is given" in
+      new ProfileContext {
+      Await.result(
+        auth(Some(Token(email, "", "", None))), 10 seconds) must_==
+          Some((Profile(profileId, Some(email), "", "", None),
+            Token(email, "", "", None)))
     }
   }
   "SessionAuthenticator No Session" should {
-    "return None if an invalid series is given" in new UnexpiredSessionContext {
-      Await.result(sessionAuthenticatorNoSession(Some(Token(email, "", token, None))), 10 seconds) must_== None
+    "return None if an invalid series is given" in
+      new UnexpiredSessionContext {
+      Await.result(
+        sessionAuthenticatorNoSession(
+          Some(Token(email, "", token, None))), 10 seconds) must_== None
     }
-    "return None if an invalid token is given" in new UnexpiredSessionContext {
-      Await.result(sessionAuthenticatorNoSession(Some(Token(email, series, "", None))), 10 seconds) must_== None
+    "return None if an invalid token is given" in
+      new UnexpiredSessionContext {
+      Await.result(
+        sessionAuthenticatorNoSession(
+          Some(Token(email, series, "", None))), 10 seconds) must_== None
     }
-    "return None if an expired token is given" in new ExpiredSessionContext {
-      Await.result(sessionAuthenticatorNoSession(Some(Token(email, series, token, None))), 10 seconds) must_== None
+    "return None if an expired token is given" in
+      new ExpiredSessionContext {
+      Await.result(
+        sessionAuthenticatorNoSession(
+          Some(Token(email, series, token, None))), 10 seconds) must_== None
     }
-    "return a profile if the token is authenticated" in new UnexpiredSessionContext {
-      Await.result(sessionAuthenticatorNoSession(Some(Token(email, series, token, None))), 10 seconds) must_==
-        Some(Profile(profileId, Some(email), "", "", None))
+    "return a profile if the token is authenticated" in
+      new UnexpiredSessionContext {
+      Await.result(
+        sessionAuthenticatorNoSession(
+          Some(Token(email, series, token, None))), 10 seconds) must_==
+            Some(Profile(profileId, Some(email), "", "", None))
     }
-    "delete the session after authentication" in new UnexpiredSessionContext {
-      Await.result(sessionAuthenticatorNoSession(Some(Token(email, series, token, None))), 10 seconds)
+    "delete the session after authentication" in
+      new UnexpiredSessionContext {
+      Await.result(
+        sessionAuthenticatorNoSession(
+          Some(Token(email, series, token, None))), 10 seconds)
       query {
-        Query(Sessions).filter(q => q.id === profileId && q.seriesHash === SHA256(series)).list must be empty
+        Query(Sessions).filter(q =>
+          q.id === profileId && q.seriesHash === SHA256(series)).list must be empty
       }
     }
   }
   "SessionAuthenticator New Session" should {
-    "return None if an invalid series is given" in new UnexpiredSessionContext {
-      Await.result(sessionAuthenticator(Some(Token(email, "", token, None))), 10 seconds) must_== None
+    "return None if an invalid series is given" in
+      new UnexpiredSessionContext {
+      Await.result(
+        sessionAuthenticator(
+          Some(Token(email, "", token, None))), 10 seconds) must_== None
     }
-    "return None if an invalid token is given" in new UnexpiredSessionContext {
-      Await.result(sessionAuthenticator(Some(Token(email, series, "", None))), 10 seconds) must_== None
+    "return None if an invalid token is given" in
+      new UnexpiredSessionContext {
+      Await.result(
+        sessionAuthenticator(
+          Some(Token(email, series, "", None))), 10 seconds) must_== None
     }
-    "return None if an expired token is given" in new ExpiredSessionContext {
-      Await.result(sessionAuthenticator(Some(Token(email, series, token, None))), 10 seconds) must_== None
+    "return None if an expired token is given" in
+      new ExpiredSessionContext {
+      Await.result(
+        sessionAuthenticator(
+          Some(Token(email, series, token, None))), 10 seconds) must_== None
     }
-    "return a profile and a new token if the token is authenticated" in new UnexpiredSessionContext {
-      Await.result(sessionAuthenticator(Some(Token(email, series, token, None))), 10 seconds) match {
+    "return a profile and a new token if the token is authenticated" in
+      new UnexpiredSessionContext {
+      Await.result(
+        sessionAuthenticator(
+          Some(Token(email, series, token, None))), 10 seconds) match {
         case Some((p: Profile, t: Token)) =>
           p must_== Profile(profileId, Some(email), "", "", None)
           t.email must_== email
@@ -88,10 +121,16 @@ class SessionAuthenticatorSpec
         case _ => failure("A Profile/Token-pair wasn't returned")
       }
     }
-    "update the session after authentication" in new UnexpiredSessionContext {
-      Await.result(sessionAuthenticator(Some(Token(email, series, token, None))), 10 seconds)
+    "update the session after authentication" in
+      new UnexpiredSessionContext {
+      Await.result(
+        sessionAuthenticator(
+          Some(Token(email, series, token, None))), 10 seconds)
       query {
-        val sessions = Query(Sessions).filter(q => q.id === profileId && q.seriesHash === SHA256(series)).list
+        val sessions =
+          Query(Sessions).filter(q =>
+            q.id === profileId && q.seriesHash === SHA256(series)).list
+
         sessions must have size (1)
         sessions.head.tokenHash must_!= SHA256(token)
       }
@@ -124,11 +163,13 @@ class SessionAuthenticatorSpec
 
     override def before = query {
       super.before
-      Sessions.insert(S(profileId, SHA256(series), SHA256(token), expirationTime))
+      Sessions.insert(
+        S(profileId, SHA256(series), SHA256(token), expirationTime))
     }
 
     override def after = query {
-      Query(Sessions).filter(q => q.id === profileId && q.seriesHash === SHA256(series)).delete
+      Query(Sessions).filter(q =>
+        q.id === profileId && q.seriesHash === SHA256(series)).delete
       super.after
     }
   }

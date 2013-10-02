@@ -34,13 +34,22 @@ trait SslConfig {
     val password = config.getString("pass")
 
     val keyStore = KeyStore.getInstance("jks")
-    keyStore.load(getClass.getResourceAsStream(keyStoreResource), password.toCharArray)
+    keyStore.load(
+      getClass.getResourceAsStream(keyStoreResource),
+      password.toCharArray)
+
     val keyManagerFactory = KeyManagerFactory.getInstance("SunX509")
     keyManagerFactory.init(keyStore, password.toCharArray)
+
     val trustManagerFactory = TrustManagerFactory.getInstance("SunX509")
     trustManagerFactory.init(keyStore)
+
     val context = SSLContext.getInstance("TLS")
-    context.init(keyManagerFactory.getKeyManagers, trustManagerFactory.getTrustManagers, new SecureRandom)
+    context.init(
+      keyManagerFactory.getKeyManagers,
+      trustManagerFactory.getTrustManagers,
+      new SecureRandom)
+
     context
   }
 

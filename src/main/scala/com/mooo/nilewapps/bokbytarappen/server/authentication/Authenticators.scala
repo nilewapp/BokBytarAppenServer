@@ -38,38 +38,50 @@ trait Authenticators
   with EmailConfirmationTokenAuthenticator {
 
   /**
-   * Authenticates with a user/pass-pair and returns the user Profile and a new session Token.
+   * Authenticates with a user/pass-pair and returns the user Profile
+   * and a new session Token.
    */
-  def authWithPass = authenticate(new BasicHttpAuthenticator("Protected", passwordAuthenticator))
+  def authWithPass =
+    authenticate(
+      new BasicHttpAuthenticator("Protected", passwordAuthenticator))
 
   /**
    * Authenticates with a user/pass-pair and returns the user Profile.
    */
   def authWithPassNoSession =
-    authenticate(new BasicHttpAuthenticator("Protected", passwordAuthenticatorNoSession))
+    authenticate(
+      new BasicHttpAuthenticator(
+        "Protected", passwordAuthenticatorNoSession))
 
   /**
-   * Authenticates with a session Token and returns the user Profile and a new session Token.
+   * Authenticates with a session Token and returns the user Profile
+   * and a new session Token.
    */
-  def authWithToken = authenticate(new NilewappTokenAuthenticator("Protected", sessionAuthenticator))
+  def authWithToken = authenticate(
+    new NilewappTokenAuthenticator("Protected", sessionAuthenticator))
 
   /**
    * Authenticates with a session Token and returns the user Profile.
    */
   def authWithTokenNoSession =
-    authenticate(new NilewappTokenAuthenticator("Protected", sessionAuthenticatorNoSession))
+    authenticate(
+      new NilewappTokenAuthenticator(
+        "Protected", sessionAuthenticatorNoSession))
 
   /**
    * Authenticates with a password reset token.
    */
-  def authWithPasswordResetToken =
-    authenticate(new SimpleTokenAuthenticator("Password reset", passwordResetTokenAuthenticator))
+  def authWithPasswordResetToken = authenticate(
+    new SimpleTokenAuthenticator(
+      "Password reset", passwordResetTokenAuthenticator))
 
   /**
    * Authenticates with an email confirmation token.
    */
   def authWithEmailConfirmationToken =
-    authenticate(new SimpleTokenAuthenticator("Email confirmation", emailConfirmationTokenAuthenticator))
+    authenticate(
+      new SimpleTokenAuthenticator(
+        "Email confirmation", emailConfirmationTokenAuthenticator))
 
 }
 

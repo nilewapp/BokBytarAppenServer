@@ -37,25 +37,33 @@ class PasswordAuthenticatorSpec
 
   "PasswordAuthenticator No Session" should {
     "return None if no credentials are given" in {
-      Await.result(passwordAuthenticatorNoSession(None), 10 seconds) must_== None
+      Await.result(
+        passwordAuthenticatorNoSession(None), 10 seconds) must_== None
     }
-    "return None if credentials for a non registered user are given" in new NoSessionContext {
+    "return None if credentials for a non registered user are given" in
+      new NoSessionContext {
       val credentials = Some(UserPass(SecureString(), pass))
-      Await.result(passwordAuthenticatorNoSession(credentials), 10 seconds) must_== None
+      Await.result(
+        passwordAuthenticatorNoSession(credentials), 10 seconds) must_== None
     }
-    "return None if an incorrect password is given" in new NoSessionContext {
+    "return None if an incorrect password is given" in
+      new NoSessionContext {
       val credentials = Some(UserPass(user, SecureString()))
-      Await.result(passwordAuthenticatorNoSession(credentials), 10 seconds) must_== None
+      Await.result(
+        passwordAuthenticatorNoSession(credentials), 10 seconds) must_== None
     }
-    "return the result of the given method of an authenticated user" in new NoSessionContext {
+    "return the result of the given method of an authenticated user" in
+      new NoSessionContext {
       val credentials = Some(UserPass(user, pass))
-      Await.result(passwordAuthenticatorNoSession(credentials), 10 seconds) must_==
-        Some(Profile(profileId, Some(user), passHash, "", None))
+      Await.result(
+        passwordAuthenticatorNoSession(credentials), 10 seconds) must_==
+          Some(Profile(profileId, Some(user), passHash, "", None))
     }
   }
 
   "PasswordAuthenticator New Session" should {
-    "return a Profile and a new session Token if the credentials are correct" in new NewSessionContext {
+    "return a Profile and a new session Token if the credentials are correct" in
+      new NewSessionContext {
       Await.result(passwordAuthenticator(credentials), 10 seconds) match {
         case Some((p, Token(email, _, _, _))) =>
           p must_== Profile(profileId, Some(user), passHash, "", None)
@@ -63,19 +71,25 @@ class PasswordAuthenticatorSpec
         case _ => failure("A Profile and a Token was not returned")
       }
     }
-    "put a new Session in the database equal to the returned Token" in new NewSessionContext {
+    "put a new Session in the database equal to the returned Token" in
+      new NewSessionContext {
       Await.result(passwordAuthenticator(credentials), 10 seconds) match {
-        case Some((Profile(id, Some(email), _, _, _), Token(tokenEmail, series, token, expirationTime))) =>
+        case Some((Profile(id, Some(email), _, _, _),
+            Token(tokenEmail, series, token, expirationTime))) =>
+
           email must_== tokenEmail
+
           query {
             val seriesHash = SHA256(series)
-            Query(Sessions).filter(q => q.id === id && q.seriesHash === seriesHash).list match {
+            Query(Sessions).filter(q =>
+              q.id === id && q.seriesHash === seriesHash).list match {
               case result: List[S] =>
                 result.length must_== 1
-                result.head.id must_== id
-                result.head.seriesHash must_== seriesHash
-                result.head.tokenHash must_== SHA256(token)
-                result.head.expirationTime must_== expirationTime.get
+                val h = result.head
+                h.id must_== id
+                h.seriesHash must_== seriesHash
+                h.tokenHash must_== SHA256(token)
+                h.expirationTime must_== expirationTime.get
               case _ => failure("A Session was not put into the database")
             }
           }

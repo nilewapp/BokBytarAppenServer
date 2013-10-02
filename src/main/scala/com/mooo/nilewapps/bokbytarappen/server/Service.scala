@@ -119,7 +119,10 @@ trait Service extends HttpService {
             <html>
               <body>
                 <h1>Enter your new password:</h1>
-                <form name="password-reset-form" action="/change-password" method="POST">
+                <form
+                    name="password-reset-form"
+                    action="/change-password"
+                    method="POST">
                   <input type="password" size="25" name="password" />
                   <input type="hidden" name="token" value={token} />
                   <input type="submit" value="Submit" />
@@ -130,8 +133,8 @@ trait Service extends HttpService {
         }
       } ~
       /**
-       * Responds with a page that immidiately redirects to a service that will
-       * confirm an email address with the given token.
+       * Responds with a page that immidiately redirects to a service that
+       * will confirm an email address with the given token.
        */
       path("confirm-email" / Rest) { token=>
         respondWithMediaType(`text/html`) {
@@ -145,7 +148,11 @@ trait Service extends HttpService {
 
             <html>
               <body>
-                <form name={formName} id={formName} action="/confirm-email" method="POST">
+                <form
+                    name={formName}
+                    id={formName}
+                    action="/confirm-email"
+                    method="POST">
                   <input type="hidden" name="token" value={token} />
                 </form>
                 <script type="text/javascript">
@@ -162,7 +169,8 @@ trait Service extends HttpService {
        * Registers the user.
        */
       path("register") {
-        formFields('email, 'name, 'phone ?, 'password) { (email, name, phone, password) =>
+        formFields('email, 'name, 'phone ?, 'password) {
+          (email, name, phone, password) =>
           respondWithMediaType(`text/plain`) {
             (validateEmail(email) & validatePassword(password)) {
               complete {
@@ -206,7 +214,9 @@ trait Service extends HttpService {
             validateEmail(email) {
               complete {
                 EmailChangeManager.requestEmailChange(user.id, email)
-                SessMess(None, "A confirmation email has been sent to %s!".format(email))
+                SessMess(
+                  None,
+                  "A confirmation email has been sent to %s!".format(email))
               }
             }
           }
@@ -228,8 +238,10 @@ trait Service extends HttpService {
               }
 
               EmailChangeManager.confirmEmail(token) match {
-                case Some(email) => page("Your email address %s has been confirmed!".format(email))
-                case None => page("Your email address was not confirmed...")
+                case Some(email) =>
+                  page("Your email address %s has been confirmed!".format(email))
+                case None =>
+                  page("Your email address was not confirmed...")
               }
             }
           }
@@ -237,8 +249,8 @@ trait Service extends HttpService {
       } ~
       /**
        * Allows the user to change password either with normal user/pass
-       * authentication or by providing a password reset token obtained from
-       * a password reset email.
+       * authentication or by providing a password reset token obtained
+       * from a password reset email.
        */
       path("change-password") {
         (authWithPassNoSession | authWithPasswordResetToken) { case user =>
@@ -259,7 +271,9 @@ trait Service extends HttpService {
         formField('email) { email =>
           complete {
             LostPasswordManager.sendResetLink(email)
-            SessMess(None, "A reset link has been sent to \'" + email + "\'.")
+            SessMess(
+              None,
+              "A reset link has been sent to \'" + email + "\'.")
           }
         }
       } ~
@@ -290,10 +304,16 @@ trait Service extends HttpService {
      */
     path("create-group") {
       (authWithToken | authWithPass) { case (user, session) =>
-        formFields('name, 'description, 'privacy.as[GroupPrivacy], 'parent.as[Int] ?) { (name, description, privacy, parent) =>
+        formFields(
+          'name,
+          'description,
+          'privacy.as[GroupPrivacy],
+          'parent.as[Int] ?) { (name, description, privacy, parent) =>
           authorize(user.isMemberOf(parent)) {
             complete {
-              val id = query(insertGroup(name, user.id, description, privacy, parent))
+              val id = query {
+                insertGroup(name, user.id, description, privacy, parent)
+              }
               SessMess(Some(session), "Created group %s".format(name))
             }
           }

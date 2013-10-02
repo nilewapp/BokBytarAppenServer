@@ -21,7 +21,8 @@ package com.mooo.nilewapps.bokbytarappen.server.validation
 object PasswordValidator {
 
   /**
-   * Returns the given password if its guessing entropy is above a certain threshold.
+   * Returns the given password if its guessing entropy is above a
+   * certain threshold.
    */
   def threshold(pass: String, thresh: Int = 18) = strength(pass) > thresh
 

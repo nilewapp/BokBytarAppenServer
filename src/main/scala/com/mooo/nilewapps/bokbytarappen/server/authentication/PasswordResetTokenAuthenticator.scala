@@ -28,9 +28,11 @@ import com.mooo.nilewapps.bokbytarappen.server.util._
 trait PasswordResetTokenAuthenticator {
 
   /**
-   * Takes a password reset token and returns the profile it belongs to if it is valid.
+   * Takes a password reset token and returns the profile it belongs
+   * to if it is valid.
    */
-  def passwordResetTokenAuthenticator(token: Option[String]): Future[Option[Profile]] = future {
+  def passwordResetTokenAuthenticator(
+      token: Option[String]): Future[Option[Profile]] = future {
     token match {
       case Some(t) => query {
         (for {

@@ -35,26 +35,44 @@ class DBSpec extends Specification {
     "be able to insert groups with no parents" in new Context {
       query {
         val groups = Query(Groups).filter(_.id === groupId).list
+
         groups must be size(1)
+
         val h = groups.head
+
         h.id must_== groupId
+
         h.name must_== "Name"
+
         h.owner must_== profileId
-        h.description.getSubString(1, h.description.length.toInt) must_== "Description"
+
+        h.description.getSubString(1, h.description.length.toInt) must_==
+          "Description"
+
         h.privacy must_== Public
+
         h.parent must_== None
       }
     }
     "be able to insert groups with a parent" in new ChildContext {
       query {
         val groups = Query(Groups).filter(_.id === childId).list
+
         groups must be size(1)
+
         val h = groups.head
+
         h.id must_== childId
+
         h.name must_== "Child"
+
         h.owner must_== profileId
-        h.description.getSubString(1, h.description.length.toInt) must_== "Child description"
+
+        h.description.getSubString(1, h.description.length.toInt) must_==
+          "Child description"
+
         h.privacy must_== Public
+
         h.parent must_== Some(groupId)
       }
     }
@@ -82,7 +100,14 @@ class DBSpec extends Specification {
 
     override def before = {
       super.before
-      childId = query(insertGroup("Child", profileId, "Child description", Public, Some(groupId)))
+      childId = query {
+        insertGroup(
+          "Child",
+          profileId,
+          "Child description",
+          Public,
+          Some(groupId))
+      }
     }
 
     override def after = {

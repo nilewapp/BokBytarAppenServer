@@ -36,21 +36,31 @@ class EmailConfirmationTokenAuthenticatorSpec
 
   "EmailConfirmationTokenAuthenticator" should {
     "not return a valid token if no token string is given" in {
-      Await.result(emailConfirmationTokenAuthenticator(None), 10 seconds) must_== None
+      Await.result(
+        emailConfirmationTokenAuthenticator(None), 10 seconds) must_== None
     }
     "not return a valid token if a non existing token string is given" in {
-      Await.result(emailConfirmationTokenAuthenticator(Some("")), 10 seconds) must_== None
+      Await.result(
+        emailConfirmationTokenAuthenticator(
+          Some("")), 10 seconds) must_== None
     }
-    "not return a valid token if an expired token string is given" in new ExpiredTokenContext {
-      Await.result(emailConfirmationTokenAuthenticator(Some(tokenString)), 10 seconds) must_== None
+    "not return a valid token if an expired token string is given" in
+      new ExpiredTokenContext {
+      Await.result(
+        emailConfirmationTokenAuthenticator(
+          Some(tokenString)), 10 seconds) must_== None
     }
-    "return a valid token if a valid, unexpired token string is given" in new ValidTokenContext {
-      Await.result(emailConfirmationTokenAuthenticator(Some(tokenString)), 10 seconds) must_==
-        Some(unexpiredToken(profileId, tokenString))
+    "return a valid token if a valid, unexpired token string is given" in
+      new ValidTokenContext {
+      Await.result(
+        emailConfirmationTokenAuthenticator(
+          Some(tokenString)), 10 seconds) must_==
+            Some(unexpiredToken(profileId, tokenString))
     }
   }
 
-  def token(id: Int, s: String, t: Long) = EmailConfirmationToken(id, SHA256(s), "", t)
+  def token(id: Int, s: String, t: Long) =
+    EmailConfirmationToken(id, SHA256(s), "", t)
 
   def expiredToken(id: Int, s: String) = token(id, s, Long.MinValue)
 

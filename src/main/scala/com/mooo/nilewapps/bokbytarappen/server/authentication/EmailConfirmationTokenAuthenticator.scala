@@ -28,16 +28,21 @@ import com.mooo.nilewapps.bokbytarappen.server.util._
 trait EmailConfirmationTokenAuthenticator {
 
   /**
-   * Takes a email confirmation token string and returns the corresponding token in the database.
+   * Takes a email confirmation token string and returns the
+   * corresponding token in the database.
    */
-  def emailConfirmationTokenAuthenticator(token: Option[String]): Future[Option[EmailConfirmationToken]] = future {
-    token match {
-      case Some(t) => query {
-        Query(EmailConfirmationTokens).filter(q =>
-          q.token === SHA256(t) &&
-          q.expirationTime > System.currentTimeMillis()).take(1).list.headOption
+  def emailConfirmationTokenAuthenticator(
+      token: Option[String]): Future[Option[EmailConfirmationToken]] = {
+    future {
+      token match {
+        case Some(t) => query {
+          Query(EmailConfirmationTokens).filter(q =>
+            q.token === SHA256(t) &&
+            q.expirationTime >
+              System.currentTimeMillis()).take(1).list.headOption
+        }
+        case _ => None
       }
-      case _ => None
     }
   }
 }

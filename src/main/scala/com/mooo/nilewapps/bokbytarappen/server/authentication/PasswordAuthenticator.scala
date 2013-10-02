@@ -46,21 +46,31 @@ trait PasswordAuthenticator {
    * Takes a user/pass-pair, checks their validity and returns the
    * profile of the user and a new Session.
    */
-  def passwordAuthenticator(credentials: Option[UserPass]): Future[Option[(Profile, Token)]] =
+  def passwordAuthenticator(
+      credentials: Option[UserPass]): Future[Option[(Profile, Token)]] =
     passwordAuthenticator(credentials, p => {
+
       lazy val series = SecureString()
+
       lazy val token = SecureString()
-      lazy val time = System.currentTimeMillis() + ConfigFactory.load().getMilliseconds("session.expiration-time")
-      if (query(Sessions.insert(Session(p.id, SHA256(series), SHA256(token), time))) == 1) {
-        Some(p, Token(p.email.get, series, token, Some(time)))
-      } else None
+
+      lazy val time = System.currentTimeMillis() +
+        ConfigFactory.load().getMilliseconds("session.expiration-time")
+
+      query {
+        Sessions.insert(Session(p.id, SHA256(series), SHA256(token), time))
+      } match {
+        case 1 => Some(p, Token(p.email.get, series, token, Some(time)))
+        case _ => None
+      }
     })
 
   /**
    * Takes a user/pass-pair, checks their validity and returns the
    * profile of the user without creating a new Session.
    */
-  def passwordAuthenticatorNoSession(credentials: Option[UserPass]): Future[Option[Profile]] =
+  def passwordAuthenticatorNoSession(
+      credentials: Option[UserPass]): Future[Option[Profile]] =
     passwordAuthenticator(credentials, Some(_))
 
 }

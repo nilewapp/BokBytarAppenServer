@@ -35,26 +35,31 @@ case object Public extends GroupPrivacy
 
 object GroupPrivacy {
 
-  implicit val String2GroupPrivacyConverter = new Deserializer[String, GroupPrivacy] {
-    def apply(value: String) = {
-      try {
-        value.toInt match {
-          case 0 => Right(Secret)
-          case 1 => Right(Closed)
-          case 2 => Right(Public)
-          case _ => groupPrivacyFormatError(value)
+  implicit val String2GroupPrivacyConverter = {
+    new Deserializer[String, GroupPrivacy] {
+      def apply(value: String) = {
+        try {
+          value.toInt match {
+            case 0 => Right(Secret)
+            case 1 => Right(Closed)
+            case 2 => Right(Public)
+            case _ => groupPrivacyFormatError(value)
+          }
+        } catch {
+          case e: NumberFormatException =>
+            groupPrivacyFormatError(value)
         }
-      } catch {
-        case e: NumberFormatException =>
-          groupPrivacyFormatError(value)
       }
-    }
 
-    private[this] def groupPrivacyFormatError(value: String): Either[DeserializationError, Nothing] =
-      Left(MalformedContent("'%s' is not a valid group privacy value".format(value)))
+      private[this] def groupPrivacyFormatError(
+          value: String): Either[DeserializationError, Nothing] =
+        Left(MalformedContent(
+          "'%s' is not a valid group privacy value".format(value)))
+    }
   }
 
-  implicit val GroupPrivacyTypeMapper = MappedTypeMapper.base[GroupPrivacy, Int]({
+  implicit val GroupPrivacyTypeMapper = {
+    MappedTypeMapper.base[GroupPrivacy, Int]({
       _ match {
         case Secret => 0
         case Closed => 1
@@ -67,4 +72,5 @@ object GroupPrivacy {
         case 2 => Public
       }
     })
+  }
 }

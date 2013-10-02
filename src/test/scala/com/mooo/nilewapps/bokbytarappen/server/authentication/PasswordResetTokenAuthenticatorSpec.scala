@@ -35,17 +35,25 @@ class PasswordResetTokenAuthenticatorSpec
 
   "PasswordResetTokenAuthenticatorSpec" should {
     "return None if no token is given" in {
-      Await.result(passwordResetTokenAuthenticator(None), 10 seconds) must_== None
+      Await.result(
+        passwordResetTokenAuthenticator(None), 10 seconds) must_== None
     }
     "return None if a non existing token is given" in {
-      Await.result(passwordResetTokenAuthenticator(Some("")), 10 seconds) must_== None
+      Await.result(
+        passwordResetTokenAuthenticator(Some("")), 10 seconds) must_== None
     }
-    "return None if an expired token is given" in new ExpiredTokenContext {
-      Await.result(passwordResetTokenAuthenticator(Some(tokenString)), 10 seconds) must_== None
+    "return None if an expired token is given" in
+      new ExpiredTokenContext {
+      Await.result(
+        passwordResetTokenAuthenticator(
+          Some(tokenString)), 10 seconds) must_== None
     }
-    "return the Profile the token belongs if the token is valid" in new ValidTokenContext {
-      Await.result(passwordResetTokenAuthenticator(Some(tokenString)), 10 seconds) must_==
-        Some(Profile(profileId, None, "", "", None))
+    "return the Profile the token belongs if the token is valid" in
+      new ValidTokenContext {
+      Await.result(
+        passwordResetTokenAuthenticator(
+          Some(tokenString)), 10 seconds) must_==
+            Some(Profile(profileId, None, "", "", None))
     }
   }
 
@@ -59,7 +67,8 @@ class PasswordResetTokenAuthenticatorSpec
     def before = query {
       profileId = insertProfile("", "", None)
       tokenString = SecureString()
-      PasswordResetTokens.insert(SimpleToken(profileId, SHA256(tokenString), Long.MinValue))
+      PasswordResetTokens.insert(
+        SimpleToken(profileId, SHA256(tokenString), Long.MinValue))
     }
 
     def after = query {
@@ -73,7 +82,8 @@ class PasswordResetTokenAuthenticatorSpec
     def before = query {
       profileId = insertProfile("", "", None)
       tokenString = SecureString()
-      PasswordResetTokens.insert(SimpleToken(profileId, SHA256(tokenString), Long.MaxValue))
+      PasswordResetTokens.insert(
+        SimpleToken(profileId, SHA256(tokenString), Long.MaxValue))
     }
 
     def after = query {

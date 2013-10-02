@@ -29,9 +29,21 @@ sealed case class ServiceError(val code: Int, val reason: String)
 object ServiceErrors {
 
   implicit def ServiceError2String(e: ServiceError) =
-    JsObject(("code", JsNumber(e.code)), ("reason", JsString(e.reason))).toString
+    JsObject(
+      ("code", JsNumber(e.code)),
+      ("reason", JsString(e.reason))).toString
 
-  val BadPassword = ServiceError(BAD_PASSWORD, "Password doesn't have sufficient guessing entropy.")
-  val UnavailableEmail = ServiceError(UNAVAILABLE_EMAIL, "Email address is already registered with another account.")
-  val InvalidEmail = ServiceError(INVALID_EMAIL, "Email address is not valid.")
+  val BadPassword =
+    ServiceError(
+      BAD_PASSWORD,
+      "Password doesn't have sufficient guessing entropy.")
+
+  val UnavailableEmail =
+    ServiceError(
+      UNAVAILABLE_EMAIL,
+      "Email address is already registered with another account.")
+
+  val InvalidEmail =
+    ServiceError(INVALID_EMAIL,
+      "Email address is not valid.")
 }

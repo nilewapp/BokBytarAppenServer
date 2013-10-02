@@ -34,7 +34,8 @@ object DB {
 
   def dbPath = getClass.getResource("/") + config.getString("name")
 
-  def url = "jdbc:h2:%s;USER=%s;PASSWORD=%s".format(dbPath, config.getString("user"), config.getString("pass"))
+  def url = "jdbc:h2:%s;USER=%s;PASSWORD=%s".format(
+    dbPath, config.getString("user"), config.getString("pass"))
 
   def db = Database.forURL(url, driver = "org.h2.Driver")
 
@@ -67,7 +68,8 @@ object DB {
     def passwordHash = column[String]("PASSWORD_HASH")
     def name = column[String]("NAME")
     def phoneNumber = column[Option[String]]("PHONE_NUMBER")
-    def * = id ~ email ~ passwordHash ~ name ~ phoneNumber <> (data.Profile, data.Profile.unapply _)
+    def * = id ~ email ~ passwordHash ~ name ~ phoneNumber <>
+      (data.Profile, data.Profile.unapply _)
     def emailIndex = index("PROFILES_EMAIL_INDEX", email, unique = true)
   }
 
@@ -76,7 +78,8 @@ object DB {
     def isbn13 = column[Int]("ISBN")
     def * = profileId ~ isbn13
     def wantedBooksPK = primaryKey("WANTED_BOOKS_PK", *)
-    def profileFK = foreignKey("WANTED_PROFILE_FK", profileId, Profiles)(_.id)
+    def profileFK =
+      foreignKey("WANTED_PROFILE_FK", profileId, Profiles)(_.id)
   }
 
   object OwnedBooks extends Table[(Int, Int)]("OWNED_BOOKS") {
@@ -92,7 +95,8 @@ object DB {
     def seriesHash = column[String]("SERIES")
     def tokenHash = column[String]("TOKEN")
     def expirationTime = column[Long]("EXPIRATION_TIME")
-    def * = id ~ seriesHash ~ tokenHash ~ expirationTime <> (data.Session, data.Session.unapply _)
+    def * = id ~ seriesHash ~ tokenHash ~ expirationTime <>
+      (data.Session, data.Session.unapply _)
     def sessionPK = primaryKey("SESSION_PK", id ~ seriesHash)
     def profileFK = foreignKey("SESSION_PROFILE_FK", id, Profiles)(_.id)
   }
@@ -104,7 +108,8 @@ object DB {
     def description = column[Clob]("DESCRIPTION")
     def privacy = column[data.GroupPrivacy]("PRIVACY")
     def parent = column[Option[Int]]("PARENT")
-    def * = id ~ name ~ owner ~ description ~ privacy ~ parent <> (data.Group, data.Group.unapply _)
+    def * = id ~ name ~ owner ~ description ~ privacy ~ parent <>
+      (data.Group, data.Group.unapply _)
     def forInsert = name ~ owner ~ description ~ privacy ~ parent
     def ownerFK = foreignKey("GROUPS_OWNER_FK", owner, Profiles)(_.id)
     def parentFK = foreignKey("GROUPS_PARENT_FK", parent, Groups)(_.id)
@@ -119,23 +124,31 @@ object DB {
     def profileFK = foreignKey("MEMBERS_PROFILE_FK", profile, Profiles)(_.id)
   }
 
-  object PasswordResetTokens extends Table[data.SimpleToken]("PASSWORD_RESET_TOKENS") {
+  object PasswordResetTokens
+      extends Table[data.SimpleToken]("PASSWORD_RESET_TOKENS") {
     def id = column[Int]("ID", O.PrimaryKey)
     def token = column[String]("TOKEN")
     def expirationTime = column[Long]("EXPIRATION_TIME")
-    def * = id ~ token ~ expirationTime <> (data.SimpleToken, data.SimpleToken.unapply _)
-    def tokenIndex = index("PASSWORD_RESET_TOKENS_TOKEN_INDEX", token, unique = true)
-    def profileFK = foreignKey("PASSWORD_RESET_TOKENS_PROFILE_FK", id, Profiles)(_.id)
+    def * = id ~ token ~ expirationTime <>
+      (data.SimpleToken, data.SimpleToken.unapply _)
+    def tokenIndex =
+      index("PASSWORD_RESET_TOKENS_TOKEN_INDEX", token, unique = true)
+    def profileFK =
+      foreignKey("PASSWORD_RESET_TOKENS_PROFILE_FK", id, Profiles)(_.id)
   }
 
-  object EmailConfirmationTokens extends Table[data.EmailConfirmationToken]("EMAIL_CONFIRMATION_TOKENS") {
+  object EmailConfirmationTokens
+      extends Table[data.EmailConfirmationToken]("EMAIL_CONFIRMATION_TOKENS") {
     def id = column[Int]("ID", O.PrimaryKey)
     def token = column[String]("TOKEN")
     def email = column[String]("EMAIL")
     def expirationTime = column[Long]("EXPIRATION_TIME")
-    def * = id ~ token ~ email ~ expirationTime <> (data.EmailConfirmationToken, data.EmailConfirmationToken.unapply _)
-    def tokenIndex = index("EMAIL_CONFIRMATION_TOKENS_TOKEN_INDEX", token, unique = true)
-    def profileFK = foreignKey("EMAIL_CONFIRMATION_TOKENS_PROFILE_FK", id, Profiles)(_.id)
+    def * = id ~ token ~ email ~ expirationTime <>
+      (data.EmailConfirmationToken, data.EmailConfirmationToken.unapply _)
+    def tokenIndex =
+      index("EMAIL_CONFIRMATION_TOKENS_TOKEN_INDEX", token, unique = true)
+    def profileFK =
+      foreignKey("EMAIL_CONFIRMATION_TOKENS_PROFILE_FK", id, Profiles)(_.id)
   }
 
   /**
@@ -146,7 +159,10 @@ object DB {
   /**
    * Inserts a new profile into the database.
    */
-  def insertProfile(passwordHash: String, name: String, phoneNumber: Option[String]): Int = {
+  def insertProfile(
+      passwordHash: String,
+      name: String,
+      phoneNumber: Option[String]): Int = {
     (Profiles.passwordHash ~
      Profiles.name ~
      Profiles.phoneNumber) returning Profiles.id insert(
@@ -156,10 +172,16 @@ object DB {
   /**
    * Inserts a new group into the database.
    */
-  def insertGroup(name: String, owner: Int, description: String, privacy: data.GroupPrivacy, parent: Option[Int]): Int = {
+  def insertGroup(
+      name: String,
+      owner: Int,
+      description: String,
+      privacy: data.GroupPrivacy,
+      parent: Option[Int]): Int = {
     val clob = threadLocalSession.conn.createClob()
     clob.setString(1, description)
-    Groups.forInsert returning Groups.id insert((name, owner, clob, privacy, parent))
+    Groups.forInsert returning Groups.id insert(
+      (name, owner, clob, privacy, parent))
   }
 
   /**
