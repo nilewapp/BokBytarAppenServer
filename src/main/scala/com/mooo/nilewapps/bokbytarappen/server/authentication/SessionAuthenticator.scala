@@ -20,7 +20,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 import com.typesafe.config._
 import slick.driver.H2Driver.simple._
-import Database.threadLocalSession
+import slick.driver.H2Driver.simple.Database.threadLocalSession
 
 import com.mooo.nilewapps.bokbytarappen.server.data._
 import com.mooo.nilewapps.bokbytarappen.server.DB._

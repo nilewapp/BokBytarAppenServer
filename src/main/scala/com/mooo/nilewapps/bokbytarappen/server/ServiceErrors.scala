@@ -19,7 +19,7 @@ import scala.language.implicitConversions
 
 import spray.json._
 
-import ServiceErrorCodes._
+import com.mooo.nilewapps.bokbytarappen.server.ServiceErrorCodes._
 
 sealed case class ServiceError(val code: Int, val reason: String)
 

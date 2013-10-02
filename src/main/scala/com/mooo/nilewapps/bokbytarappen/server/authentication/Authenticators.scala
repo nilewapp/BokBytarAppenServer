@@ -20,7 +20,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 import com.typesafe.config._
 import slick.driver.H2Driver.simple._
-import Database.threadLocalSession
+import slick.driver.H2Driver.simple.Database.threadLocalSession
 import spray.routing.authentication.{BasicHttpAuthenticator, UserPass}
 import spray.routing.Directives.authenticate
 

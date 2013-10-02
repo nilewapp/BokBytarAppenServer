@@ -15,15 +15,13 @@
  */
 package com.mooo.nilewapps.bokbytarappen.server
 
-import scala.slick.driver.H2Driver.simple._
-import Database.threadLocalSession
-
 import com.typesafe.config._
+import slick.driver.H2Driver.simple._
+import slick.driver.H2Driver.simple.Database.threadLocalSession
 
-import DB._
-import util._
-
-import data.EmailConfirmationToken
+import com.mooo.nilewapps.bokbytarappen.server.data.EmailConfirmationToken
+import com.mooo.nilewapps.bokbytarappen.server.DB._
+import com.mooo.nilewapps.bokbytarappen.server.util._
 
 object EmailChangeManager {
 

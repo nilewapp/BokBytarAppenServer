@@ -16,7 +16,7 @@
 package com.mooo.nilewapps.bokbytarappen.server
 
 import scala.slick.driver.H2Driver.simple._
-import Database.threadLocalSession
+import scala.slick.driver.H2Driver.simple.Database.threadLocalSession
 
 import com.mooo.nilewapps.bokbytarappen.server.DB._
 

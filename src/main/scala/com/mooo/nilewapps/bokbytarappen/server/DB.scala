@@ -17,10 +17,9 @@ package com.mooo.nilewapps.bokbytarappen.server
 
 import java.sql.Clob
 
-import scala.slick.driver.H2Driver.simple._
-import Database.threadLocalSession
-
 import com.typesafe.config._
+import slick.driver.H2Driver.simple._
+import slick.driver.H2Driver.simple.Database.threadLocalSession
 
 import com.mooo.nilewapps.bokbytarappen.server.data.GroupPrivacy._
 import com.mooo.nilewapps.bokbytarappen.server.util._

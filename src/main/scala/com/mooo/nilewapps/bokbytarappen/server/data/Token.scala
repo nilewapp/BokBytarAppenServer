@@ -16,7 +16,6 @@
 package com.mooo.nilewapps.bokbytarappen.server.data
 
 import spray.json.DefaultJsonProtocol
-import DefaultJsonProtocol._
 
 /**
  * Defines the session object that is sent to the user

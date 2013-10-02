@@ -17,17 +17,16 @@ package com.mooo.nilewapps.bokbytarappen.server.authentication
 
 import scala.concurrent._
 import scala.concurrent.duration._
-import ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext.Implicits.global
 
-import scala.slick.driver.H2Driver.simple._
-import Database.threadLocalSession
-
-import org.specs2.time.NoTimeConversions
 import org.specs2.mutable.{NameSpace, Specification, BeforeAfter}
+import org.specs2.time.NoTimeConversions
+import slick.driver.H2Driver.simple._
+import slick.driver.H2Driver.simple.Database.threadLocalSession
 import spray.routing.authentication.UserPass
 
-import com.mooo.nilewapps.bokbytarappen.server.DB._
 import com.mooo.nilewapps.bokbytarappen.server.data.{Profile, Token, Session => S}
+import com.mooo.nilewapps.bokbytarappen.server.DB._
 import com.mooo.nilewapps.bokbytarappen.server.util._
 
 class PasswordAuthenticatorSpec
