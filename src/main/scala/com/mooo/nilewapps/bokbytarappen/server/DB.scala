@@ -138,6 +138,9 @@ object DB {
     def profileFK = foreignKey("EMAIL_CONFIRMATION_TOKENS_PROFILE_FK", id, Profiles)(_.id)
   }
 
+  /**
+   * Performs an arbitrary method in a new database session.
+   */
   def query[T](f: => T): T = db withSession f
 
   /**
