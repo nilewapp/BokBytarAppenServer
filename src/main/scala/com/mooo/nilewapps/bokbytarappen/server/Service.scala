@@ -319,32 +319,18 @@ trait Service extends HttpService {
     path("join-group") {
       (authWithToken | authWithPass) { case (user, session) =>
         formField('group.as[Int]) { groupId =>
-          query {
+          val group = query {
             Query(Groups).filter(_.id === groupId).take(1).list.headOption
-          } match {
-            case Some(group) => {
-              (for {
-                p <- Groups
-                m <- Members
-                if p.id === group.parent &&
-                   m.group === p.id &&
-                   m.profile === user.id
-              } yield m).take(1).list.headOption match {
-                case Some(_) =>
-                  complete {
-                    SessMess(
-                      Some(session), "Joined group %s".format(group.name))
-                  }
-                case None =>
-                  validate(false, NotMemberOfParentGroup) {
-                    complete("Ok")
-                  }
+          }
+          (validate(group != None, NonExistingGroup) &
+           validate(!user.isMemberOf(Some(groupId)), AlreadyMemberOfGroup) &
+           validate(user.isMemberOf(group.get.parent), NotMemberOfParentGroup)) {
+            complete {
+              query {
+                Members.insert((groupId, user.id))
               }
-            }
-            case None => {
-              validate(false, NonExistingGroup) {
-                complete("Ok")
-              }
+              SessMess(
+                Some(session), "Joined group %s".format(group.get.name))
             }
           }
         }

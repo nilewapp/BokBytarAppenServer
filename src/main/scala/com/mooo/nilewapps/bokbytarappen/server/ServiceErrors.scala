@@ -57,4 +57,9 @@ object ServiceErrors {
     ServiceError(
       NOT_MEMBER_OF_PARENT_GROUP,
       "You are not a member of the parent group.")
+
+  val AlreadyMemberOfGroup =
+    ServiceError(
+      ALREADY_MEMBER_OF_GROUP,
+      "You are already a member of the group.")
 }

@@ -47,4 +47,10 @@ class ServiceErrorCodes {
    * user isn't a member of.
    */
   public static final int NOT_MEMBER_OF_PARENT_GROUP = 5;
+
+  /**
+   * Returned when the user tries to join a Group which the user is
+   * already a member of.
+   */
+  public static final int ALREADY_MEMBER_OF_GROUP = 6;
 }
