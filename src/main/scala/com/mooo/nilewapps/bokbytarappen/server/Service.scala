@@ -304,7 +304,7 @@ trait Service extends HttpService {
           'parent.as[Int] ?) { (name, description, privacy, parent) =>
           authorize(user.isMemberOf(parent)) {
             complete {
-              val id = query {
+              query {
                 insertGroup(name, user.id, description, privacy, parent)
               }
               SessMess(Some(session), "Created group %s".format(name))
