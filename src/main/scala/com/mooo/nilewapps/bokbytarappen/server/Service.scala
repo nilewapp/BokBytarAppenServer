@@ -335,6 +335,30 @@ trait Service extends HttpService {
           }
         }
       }
+    } ~
+    /**
+     * Removes a user from a group.
+     */
+    path("leave-group") {
+      (authWithToken | authWithPass) { case (user, session) =>
+        formField('group.as[Int]) { groupId =>
+          val group = query {
+            Query(Groups).filter(_.id === groupId).take(1).list.headOption
+          }
+          (validate(group != None, NonExistingGroup) &
+           validate(user.isMemberOf(Some(groupId)), NotMemberOfGroup) &
+           validate(user.isMemberOfChild(Some(groupId)), MemberOfChildGroup)) {
+            complete {
+              query {
+                Query(Members).filter(q =>
+                  q.group === groupId && q.profile === user.id).delete
+              }
+              SessMess(
+                Some(session), "Left group %s".format(group.get.name))
+            }
+          }
+        }
+      }
     }
   }
 }

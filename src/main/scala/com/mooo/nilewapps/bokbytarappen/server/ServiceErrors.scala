@@ -62,4 +62,14 @@ object ServiceErrors {
     ServiceError(
       ALREADY_MEMBER_OF_GROUP,
       "You are already a member of the group.")
+
+  val NotMemberOfGroup =
+    ServiceError(
+      NOT_MEMBER_OF_GROUP,
+      "You are not a member of the group.")
+
+  val MemberOfChildGroup =
+    ServiceError(
+      MEMBER_OF_CHILD_GROUP,
+      "You are still a member of a child group.")
 }

@@ -53,4 +53,16 @@ class ServiceErrorCodes {
    * already a member of.
    */
   public static final int ALREADY_MEMBER_OF_GROUP = 6;
+
+  /**
+   * Returned when the user tries to leave a Group which the user is
+   * not a member of.
+   */
+  public static final int NOT_MEMBER_OF_GROUP = 7;
+
+  /**
+   * Returned when the user tries to leave a Group when the user is
+   * still a member of a child Group.
+   */
+  public static final int MEMBER_OF_CHILD_GROUP = 8;
 }

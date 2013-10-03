@@ -35,4 +35,22 @@ case class Profile(
       case None => true
     }
   }
+
+  def isMemberOfChild(parentId: Option[Int]): Boolean = query {
+    parentId match {
+      case Some(i) =>
+        (for {
+          g <- Groups
+          m <- Members
+          if m.profile === id &&
+             m.group === g.id &&
+             g.parent === parentId
+        } yield g.name).list.isEmpty
+      case None =>
+        (for {
+          m <- Members
+          if m.profile === id
+        } yield m).list.isEmpty
+    }
+  }
 }
