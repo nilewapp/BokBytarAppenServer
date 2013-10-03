@@ -73,7 +73,7 @@ trait Service extends HttpService {
 
   implicit val SessMessStringFormat = jsonFormat2(SessMess[String])
 
-  val routes =
+  val routes = {
     get {
       path("") {
         respondWithMediaType(`text/html`) {
@@ -293,7 +293,7 @@ trait Service extends HttpService {
       }
     } ~
     /**
-     * Creates a group
+     * Creates a group.
      */
     path("create-group") {
       (authWithToken | authWithPass) { case (user, session) =>
@@ -312,5 +312,43 @@ trait Service extends HttpService {
           }
         }
       }
+    } ~
+    /**
+     * Adds a user to a group.
+     */
+    path("join-group") {
+      (authWithToken | authWithPass) { case (user, session) =>
+        formField('group.as[Int]) { groupId =>
+          query {
+            Query(Groups).filter(_.id === groupId).take(1).list.headOption
+          } match {
+            case Some(group) => {
+              (for {
+                p <- Groups
+                m <- Members
+                if p.id === group.parent &&
+                   m.group === p.id &&
+                   m.profile === user.id
+              } yield m).take(1).list.headOption match {
+                case Some(_) =>
+                  complete {
+                    SessMess(
+                      Some(session), "Joined group %s".format(group.name))
+                  }
+                case None =>
+                  validate(false, NotMemberOfParentGroup) {
+                    complete("Ok")
+                  }
+              }
+            }
+            case None => {
+              validate(false, NonExistingGroup) {
+                complete("Ok")
+              }
+            }
+          }
+        }
+      }
     }
+  }
 }

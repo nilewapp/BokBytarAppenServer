@@ -44,6 +44,17 @@ object ServiceErrors {
       "Email address is already registered with another account.")
 
   val InvalidEmail =
-    ServiceError(INVALID_EMAIL,
+    ServiceError(
+      INVALID_EMAIL,
       "Email address is not valid.")
+
+  val NonExistingGroup =
+    ServiceError(
+      NON_EXISTING_GROUP,
+      "Group does not exist.")
+
+  val NotMemberOfParentGroup =
+    ServiceError(
+      NOT_MEMBER_OF_PARENT_GROUP,
+      "You are not a member of the parent group.")
 }

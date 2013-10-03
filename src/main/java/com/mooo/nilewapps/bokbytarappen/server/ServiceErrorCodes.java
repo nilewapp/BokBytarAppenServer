@@ -36,4 +36,15 @@ class ServiceErrorCodes {
    * Returned when the user tries to register an invalid email address.
    */
   public static final int INVALID_EMAIL = 3;
+
+  /**
+   * Returned when the user tries to join a Group that doesn't exist.
+   */
+  public static final int NON_EXISTING_GROUP = 4;
+
+  /**
+   * Returned when the user tries to join a Group which parent the
+   * user isn't a member of.
+   */
+  public static final int NOT_MEMBER_OF_PARENT_GROUP = 5;
 }
