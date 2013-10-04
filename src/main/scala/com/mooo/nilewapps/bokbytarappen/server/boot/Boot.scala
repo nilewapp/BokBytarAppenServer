@@ -15,28 +15,27 @@
  */
 package com.mooo.nilewapps.bokbytarappen.server.boot
 
-import akka.actor.Props
+import akka.actor.{ActorSystem, Props}
+import akka.io.IO
 import com.typesafe.config._
-import spray.can.server.SprayCanHttpServerApp
+import spray.can.Http
 
 import com.mooo.nilewapps.bokbytarappen.server.ServiceActor
 
 /**
  *  Starts the server
  */
-object Boot
-    extends App
-    with SprayCanHttpServerApp
-    with SslConfig {
+object Boot extends App with SslConfig {
+
+  implicit val system = ActorSystem("Bokbytarappen")
 
   /* Create and start the service actor */
-  val service = system.actorOf(Props[ServiceActor], "handler")
+  val handler = system.actorOf(Props[ServiceActor], "handler")
 
   val config = ConfigFactory.load().getConfig("http-server")
 
   /* Create and bind the http server */
-  newHttpServer(service) ! Bind(
-      interface = config.getString("interface"),
-      port = config.getInt("port"))
-
+  IO(Http) ! Http.Bind(handler,
+    config.getString("interface"),
+    port = config.getInt("port"))
 }
