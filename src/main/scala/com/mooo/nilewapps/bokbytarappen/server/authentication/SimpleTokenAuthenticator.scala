@@ -21,6 +21,7 @@ import spray.http._
 import spray.http.HttpHeaders._
 import spray.httpx.unmarshalling._
 import spray.routing._
+import spray.routing.AuthenticationFailedRejection._
 import spray.routing.authentication._
 
 class SimpleTokenAuthenticator[U](
@@ -31,12 +32,17 @@ class SimpleTokenAuthenticator[U](
   extends ContextAuthenticator[U] {
 
   def apply(ctx: RequestContext) = {
-    authenticate(ctx) map {
+    val field = ctx.request.entity.as[FormData] match {
+      case Right(m) => Map(m.fields: _*).get(fieldName)
+      case _ => None
+    }
+    authenticate(field) map {
       case Some(t) => Right(t)
       case None =>
-        Left(AuthenticationFailedRejection(
-          AuthenticationFailedRejection.CredentialsRejected,
-          getChallengeHeaders(ctx.request)))
+        val cause =
+          if (field == None) CredentialsMissing
+          else CredentialsRejected
+        Left(AuthenticationFailedRejection(cause, getChallengeHeaders(ctx.request)))
     }
   }
 
@@ -44,11 +50,8 @@ class SimpleTokenAuthenticator[U](
    * Extracts a password reset token from the request entity and
    * passes it to the authenticator.
    */
-  def authenticate(ctx: RequestContext) = authenticator {
-    ctx.request.entity.as[FormData] match {
-      case Right(m) => Map(m.fields: _*).get(fieldName)
-      case _ => None
-    }
+  def authenticate(field: Option[String]) = authenticator {
+    field
   }
 
   def getChallengeHeaders(httpRequest: HttpRequest) =

@@ -37,6 +37,12 @@ class SimpleTokenAuthenticatorSpec
     }
   }
 
+  def authFail = {
+    authenticate(new SimpleTokenAuthenticator(realm, t => future { None: Option[String] })) {
+      t => complete("")
+    }
+  }
+
   def challengeHeaders =
     `WWW-Authenticate`(HttpChallenge(
       scheme = "Nilewapp", realm = realm, params = Map.empty)) :: Nil
@@ -49,6 +55,12 @@ class SimpleTokenAuthenticatorSpec
   "SimpleTokenAuthenticator" should {
     "reject if the required request entity field isn't present" in {
       Post() ~> auth ~> check {
+        rejection must_==
+          AuthenticationFailedRejection(CredentialsMissing, challengeHeaders)
+      }
+    }
+    "reject if the authenticator returns None" in {
+      Post("/", FormData(Map("token" -> "value"))) ~> authFail ~> check {
         rejection must_==
           AuthenticationFailedRejection(CredentialsRejected, challengeHeaders)
       }
