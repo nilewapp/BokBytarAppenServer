@@ -137,10 +137,10 @@ trait Service
       path("change-password") { changePassword } ~
       path("lost-password") { lostPassword } ~
       path("sign-out") { signOut } ~
-      path("delete-session-data") { deleteSessionData }
-    } ~
-    path("create-group") { createGroup } ~
-    path("join-group") { joinGroup } ~
-    path("leave-group") { leaveGroup }
+      path("delete-session-data") { deleteSessionData } ~
+      path("create-group") { createGroup } ~
+      path("join-group") { joinGroup } ~
+      path("leave-group") { leaveGroup }
+    }
   }
 }
