@@ -23,24 +23,19 @@ import akka.actor.Actor
 import com.typesafe.config._
 import slick.driver.H2Driver.simple._
 import slick.driver.H2Driver.simple.Database.threadLocalSession
-import spray.http._
 import spray.http.MediaTypes._
-import spray.http.StatusCodes._
-import spray.httpx.marshalling._
 import spray.httpx.SprayJsonSupport._
-import spray.json.DefaultJsonProtocol
-import spray.routing._
-import spray.routing.authentication._
-import spray.util.LoggingContext
+import spray.routing.HttpService
 
 import com.mooo.nilewapps.bokbytarappen.server.authentication.Authenticators._
 import com.mooo.nilewapps.bokbytarappen.server.data._
-import com.mooo.nilewapps.bokbytarappen.server.data.GroupPrivacy._
 import com.mooo.nilewapps.bokbytarappen.server.data.TokenJsonProtocol._
 import com.mooo.nilewapps.bokbytarappen.server.DB._
+import com.mooo.nilewapps.bokbytarappen.server.service._
 import com.mooo.nilewapps.bokbytarappen.server.ServiceErrors._
 import com.mooo.nilewapps.bokbytarappen.server.util._
 import com.mooo.nilewapps.bokbytarappen.server.validation._
+import com.mooo.nilewapps.bokbytarappen.server.validation.Validators._
 
 /**
  * Actor that runs the service.
@@ -56,22 +51,12 @@ class ServiceActor extends Actor with Service {
 /**
  * Provides all functionality of the server.
  */
-trait Service extends HttpService {
-
-  /**
-   * Asserts that an email address is valid and available.
-   */
-  def validateEmail(email: String) =
-    validate(EmailValidator.isValid(email), InvalidEmail) &
-    validate(EmailValidator.isAvailable(email), UnavailableEmail)
-
-  /**
-   * Asserts that a password has sufficient guessing entropy.
-   */
-  def validatePassword(password: String) =
-    validate(PasswordValidator.threshold(password), BadPassword)
-
-  implicit val SessMessStringFormat = jsonFormat2(SessMess[String])
+trait Service
+    extends HttpService
+    with PasswordService
+    with EmailService
+    with GroupService
+    with SessionService {
 
   val routes = {
     get {
@@ -103,59 +88,8 @@ trait Service extends HttpService {
           }
         }
       } ~
-      /**
-       * Resonds with password reset form.
-       */
-      path("change-password" / Rest) { token =>
-        respondWithMediaType(`text/html`) {
-          complete {
-            <html>
-              <body>
-                <h1>Enter your new password:</h1>
-                <form
-                    name="password-reset-form"
-                    action="/change-password"
-                    method="POST">
-                  <input type="password" size="25" name="password" />
-                  <input type="hidden" name="token" value={token} />
-                  <input type="submit" value="Submit" />
-                </form>
-              </body>
-            </html>
-          }
-        }
-      } ~
-      /**
-       * Responds with a page that immidiately redirects to a service that
-       * will confirm an email address with the given token.
-       */
-      path("confirm-email" / Rest) { token=>
-        respondWithMediaType(`text/html`) {
-          complete {
-            lazy val formName = "email-confirmation-form"
-            lazy val formSubmit = """
-              window.onload = function() {
-                document.getElementById('%s').submit()
-              }
-            """.format(formName)
-
-            <html>
-              <body>
-                <form
-                    name={formName}
-                    id={formName}
-                    action="/confirm-email"
-                    method="POST">
-                  <input type="hidden" name="token" value={token} />
-                </form>
-                <script type="text/javascript">
-                  {formSubmit}
-                </script>
-              </body>
-            </html>
-          }
-        }
-      }
+      path("change-password" / Rest) { passwordChangeForm(_) } ~
+      path("confirm-email" / Rest) { emailConfirmationPage(_) }
     } ~
     post {
       /**
@@ -198,167 +132,15 @@ trait Service extends HttpService {
           }
         }
       } ~
-      /**
-       * Lets the user change his email address.
-       */
-      path("change-email") {
-        authWithPassNoSession { case user =>
-          formField('email) { email =>
-            validateEmail(email) {
-              complete {
-                EmailChangeManager.requestEmailChange(user.id, email)
-                SessMess(
-                  None,
-                  "A confirmation email has been sent to %s!".format(email))
-              }
-            }
-          }
-        }
-      } ~
-      /**
-       * Lets the user confirm his email address.
-       */
-      path("confirm-email") {
-        authWithEmailConfirmationToken { token =>
-          respondWithMediaType(`text/html`) {
-            complete {
-              def page(s: String) = {
-                <html>
-                  <body>
-                    <h1>{s}</h1>
-                  </body>
-                </html>
-              }
-
-              EmailChangeManager.confirmEmail(token) match {
-                case Some(email) =>
-                  page("Your email address %s has been confirmed!".format(email))
-                case None =>
-                  page("Your email address was not confirmed...")
-              }
-            }
-          }
-        }
-      } ~
-      /**
-       * Allows the user to change password either with normal user/pass
-       * authentication or by providing a password reset token obtained
-       * from a password reset email.
-       */
-      path("change-password") {
-        (authWithPassNoSession | authWithPasswordResetToken) { case user =>
-          formField('password) { password =>
-            validatePassword(password) {
-              complete {
-                query(updatePassword(user, password))
-                SessMess(None, "Password successfully changed!")
-              }
-            }
-          }
-        }
-      } ~
-      /**
-       * Sends a password reset link to a given email address.
-       */
-      path("lost-password") {
-        formField('email) { email =>
-          complete {
-            LostPasswordManager.sendResetLink(email)
-            SessMess(
-              None,
-              "A reset link has been sent to \'" + email + "\'.")
-          }
-        }
-      } ~
-      /**
-       * Logs the user out of his current session.
-       */
-      path("sign-out") {
-        authWithTokenNoSession { case user =>
-          complete {
-            SessMess(None, "You have been signed out!")
-          }
-        }
-      } ~
-      /**
-       * Deletes all session data that belongs to a user.
-       */
-      path("delete-session-data") {
-        (authWithTokenNoSession | authWithPassNoSession) { case user =>
-          complete {
-            query(deleteSessionData(user.id))
-            SessMess(None, "Your session data has been deleted!")
-          }
-        }
-      }
+      path("change-email") { changeEmail } ~
+      path("confirm-email") { confirmEmail } ~
+      path("change-password") { changePassword } ~
+      path("lost-password") { lostPassword } ~
+      path("sign-out") { signOut } ~
+      path("delete-session-data") { deleteSessionData }
     } ~
-    /**
-     * Creates a group.
-     */
-    path("create-group") {
-      (authWithToken | authWithPass) { case (user, session) =>
-        formFields(
-          'name,
-          'description,
-          'privacy.as[GroupPrivacy],
-          'parent.as[Int] ?) { (name, description, privacy, parent) =>
-          authorize(user.isMemberOf(parent)) {
-            complete {
-              query {
-                insertGroup(name, user.id, description, privacy, parent)
-              }
-              SessMess(Some(session), "Created group %s".format(name))
-            }
-          }
-        }
-      }
-    } ~
-    /**
-     * Adds a user to a group.
-     */
-    path("join-group") {
-      (authWithToken | authWithPass) { case (user, session) =>
-        formField('group.as[Int]) { groupId =>
-          val group = query {
-            Query(Groups).filter(_.id === groupId).take(1).list.headOption
-          }
-          (validate(group != None, NonExistingGroup) &
-           validate(!user.isMemberOf(Some(groupId)), AlreadyMemberOfGroup) &
-           validate(user.isMemberOf(group.get.parent), NotMemberOfParentGroup)) {
-            complete {
-              query {
-                Members.insert((groupId, user.id))
-              }
-              SessMess(
-                Some(session), "Joined group %s".format(group.get.name))
-            }
-          }
-        }
-      }
-    } ~
-    /**
-     * Removes a user from a group.
-     */
-    path("leave-group") {
-      (authWithToken | authWithPass) { case (user, session) =>
-        formField('group.as[Int]) { groupId =>
-          val group = query {
-            Query(Groups).filter(_.id === groupId).take(1).list.headOption
-          }
-          (validate(group != None, NonExistingGroup) &
-           validate(user.isMemberOf(Some(groupId)), NotMemberOfGroup) &
-           validate(user.isMemberOfChild(Some(groupId)), MemberOfChildGroup)) {
-            complete {
-              query {
-                Query(Members).filter(q =>
-                  q.group === groupId && q.profile === user.id).delete
-              }
-              SessMess(
-                Some(session), "Left group %s".format(group.get.name))
-            }
-          }
-        }
-      }
-    }
+    path("create-group") { createGroup } ~
+    path("join-group") { joinGroup } ~
+    path("leave-group") { leaveGroup }
   }
 }
