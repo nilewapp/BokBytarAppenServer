@@ -30,7 +30,7 @@ class ServiceSpec
   "Service" should {
     "return a greeting for GET requests to the root path" in {
       Get() ~> routes ~> check {
-        entityAs[String] must contain("Say hello")
+        responseAs[String] must contain("Say hello")
       }
     }
   }
