@@ -21,6 +21,7 @@ import org.specs2.mutable.Specification
 import spray.http._
 import spray.http.HttpHeaders._
 import spray.routing._
+import spray.routing.AuthenticationFailedRejection._
 import spray.routing.Directives._
 import spray.testkit.Specs2RouteTest
 
@@ -32,12 +33,19 @@ class NilewappTokenAuthenticatorSpec
 
   val realm = "Protected"
 
+  def challengeHeaders =
+    `WWW-Authenticate`(HttpChallenge(
+      scheme = "Nilewapp", realm = realm, params = Map.empty)) :: Nil
+
   def auth = {
     authenticate(
-      new NilewappTokenAuthenticator( realm, { t => future { t } })) {
+      new NilewappTokenAuthenticator(realm, { t => future { t } })) {
       t => complete(t.toString)
     }
   }
+
+  def credentialsRejected =
+    AuthenticationFailedRejection(CredentialsRejected, challengeHeaders)
 
   def encode(s: String) = {
     val en = new sun.misc.BASE64Encoder()
@@ -47,28 +55,29 @@ class NilewappTokenAuthenticatorSpec
   "NilewappTokenAuthenticator" should {
     "reject if no authorization header is present" in {
       Post() ~> auth ~> check {
-        rejection === AuthenticationFailedRejection(realm)
+        rejection must_==
+          AuthenticationFailedRejection(CredentialsMissing, challengeHeaders)
       }
     }
     "reject if the authorization scheme is wrong" in {
-      Post() ~> addHeader(Authorization( GenericHttpCredentials("Wrong",
+      Post() ~> addHeader(Authorization(GenericHttpCredentials("Wrong",
           Map("email" -> "", "series" -> "", "token" -> "")))) ~>
         auth ~> check {
-        rejection === AuthenticationFailedRejection(realm)
+        rejection must_== credentialsRejected
       }
     }
     "reject if the correct parameters aren't in the header" in {
       Post() ~> addHeader(Authorization(GenericHttpCredentials("Nilewapp",
         Map("email" -> "", "series" -> "")))) ~> auth ~> check {
-        rejection === AuthenticationFailedRejection(realm)
+        rejection must_== credentialsRejected
       }
       Post() ~> addHeader(Authorization(GenericHttpCredentials("Nilewapp",
         Map("email" -> "", "token" -> "")))) ~> auth ~> check {
-        rejection === AuthenticationFailedRejection(realm)
+        rejection must_== credentialsRejected
       }
       Post() ~> addHeader(Authorization(GenericHttpCredentials("Nilewapp",
         Map("series" -> "", "token" -> "")))) ~> auth ~> check {
-        rejection === AuthenticationFailedRejection(realm)
+        rejection must_== credentialsRejected
       }
     }
     "return the result of the authenticator if a correct authorization header is given" in {
@@ -76,7 +85,7 @@ class NilewappTokenAuthenticatorSpec
         Map("email" -> encode("value1"),
           "series" -> encode("value2"),
           "token" -> encode("value3"))))) ~> auth ~> check {
-        entityAs[String] must_==
+        responseAs[String] must_==
           Token("value1", "value2", "value3", None).toString
       }
     }

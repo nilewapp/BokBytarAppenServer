@@ -21,6 +21,7 @@ import org.specs2.mutable.Specification
 import spray.http._
 import spray.http.HttpHeaders._
 import spray.routing._
+import spray.routing.AuthenticationFailedRejection._
 import spray.routing.Directives._
 import spray.testkit.Specs2RouteTest
 
@@ -36,6 +37,10 @@ class SimpleTokenAuthenticatorSpec
     }
   }
 
+  def challengeHeaders =
+    `WWW-Authenticate`(HttpChallenge(
+      scheme = "Nilewapp", realm = realm, params = Map.empty)) :: Nil
+
   def encode(s: String) = {
     val en = new sun.misc.BASE64Encoder()
     new String(en.encode(s.getBytes))
@@ -44,12 +49,13 @@ class SimpleTokenAuthenticatorSpec
   "SimpleTokenAuthenticator" should {
     "reject if the required request entity field isn't present" in {
       Post() ~> auth ~> check {
-        rejection === AuthenticationFailedRejection(realm)
+        rejection must_==
+          AuthenticationFailedRejection(CredentialsRejected, challengeHeaders)
       }
     }
     "return the result of the authenticator if a correct entity field is present" in {
       Post("/", FormData(Map("token" -> "value"))) ~> auth ~> check {
-        entityAs[String] must_== "value"
+        responseAs[String] must_== "value"
       }
     }
   }

@@ -18,6 +18,7 @@ package com.mooo.nilewapps.bokbytarappen.server.authentication
 import scala.concurrent.{ExecutionContext, Future}
 
 import spray.http._
+import spray.http.HttpHeaders._
 import spray.httpx.unmarshalling._
 import spray.routing._
 import spray.routing.authentication._
@@ -32,9 +33,10 @@ class SimpleTokenAuthenticator[U](
   def apply(ctx: RequestContext) = {
     authenticate(ctx) map {
       case Some(t) => Right(t)
-      case None => Left {
-        AuthenticationFailedRejection(realm)
-      }
+      case None =>
+        Left(AuthenticationFailedRejection(
+          AuthenticationFailedRejection.CredentialsRejected,
+          getChallengeHeaders(ctx.request)))
     }
   }
 
@@ -44,8 +46,12 @@ class SimpleTokenAuthenticator[U](
    */
   def authenticate(ctx: RequestContext) = authenticator {
     ctx.request.entity.as[FormData] match {
-      case Right(m) => m.fields.get(fieldName)
+      case Right(m) => Map(m.fields: _*).get(fieldName)
       case _ => None
     }
   }
+
+  def getChallengeHeaders(httpRequest: HttpRequest) =
+    `WWW-Authenticate`(HttpChallenge(
+      scheme = "Nilewapp", realm = realm, params = Map.empty)) :: Nil
 }

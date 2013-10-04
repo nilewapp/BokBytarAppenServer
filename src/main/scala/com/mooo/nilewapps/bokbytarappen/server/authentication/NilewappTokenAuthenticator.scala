@@ -21,6 +21,7 @@ import scala.util.parsing.combinator._
 import spray.http._
 import spray.http.HttpHeaders._
 import spray.routing._
+import spray.routing.AuthenticationFailedRejection._
 import spray.routing.authentication._
 import spray.util._
 
@@ -38,12 +39,14 @@ class NilewappTokenAuthenticator[U](
 
   def apply(ctx: RequestContext) = {
     val authHeader = ctx.request.headers.findByType[`Authorization`]
-    val credentials = authHeader.map { case Authorization(creds) => creds }
+    val credentials = authHeader map { case Authorization(creds) => creds }
     authenticate(credentials) map {
       case Some(token) => Right(token)
-      case None => Left {
-        AuthenticationFailedRejection(realm)
-      }
+      case None =>
+        val cause =
+          if (authHeader.isEmpty) CredentialsMissing
+          else CredentialsRejected
+        Left(AuthenticationFailedRejection(cause, getChallengeHeaders(ctx.request)))
     }
   }
 
@@ -66,4 +69,8 @@ class NilewappTokenAuthenticator[U](
       }
     }
   }
+
+  def getChallengeHeaders(httpRequest: HttpRequest) =
+    `WWW-Authenticate`(HttpChallenge(
+      scheme = "Nilewapp", realm = realm, params = Map.empty)) :: Nil
 }
