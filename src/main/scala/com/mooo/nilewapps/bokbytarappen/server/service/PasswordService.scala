@@ -18,7 +18,7 @@ package com.mooo.nilewapps.bokbytarappen.server.service
 import slick.driver.H2Driver.simple._
 import slick.driver.H2Driver.simple.Database.threadLocalSession
 import spray.httpx.SprayJsonSupport._
-import spray.routing.HttpService
+import spray.routing.Directives._
 
 import com.mooo.nilewapps.bokbytarappen.server.authentication.Authenticators._
 import com.mooo.nilewapps.bokbytarappen.server.data.SessMess
@@ -30,7 +30,7 @@ import com.mooo.nilewapps.bokbytarappen.server.validation.Validators._
 /**
  * Contains routes for services regarding user password management.
  */
-trait PasswordService extends HttpService {
+trait PasswordService {
 
   /**
    * Resonds with password reset form.

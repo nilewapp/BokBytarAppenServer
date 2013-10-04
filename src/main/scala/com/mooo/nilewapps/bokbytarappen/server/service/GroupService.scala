@@ -20,7 +20,7 @@ import scala.language.postfixOps
 import slick.driver.H2Driver.simple._
 import slick.driver.H2Driver.simple.Database.threadLocalSession
 import spray.httpx.SprayJsonSupport._
-import spray.routing.HttpService
+import spray.routing.Directives._
 
 import com.mooo.nilewapps.bokbytarappen.server.authentication.Authenticators._
 import com.mooo.nilewapps.bokbytarappen.server.data.GroupPrivacy._
@@ -33,7 +33,7 @@ import com.mooo.nilewapps.bokbytarappen.server.ServiceErrors._
 /**
  * Contains routes for user management of Groups
  */
-trait GroupService extends HttpService {
+trait GroupService {
 
   /**
    * Creates a group.
