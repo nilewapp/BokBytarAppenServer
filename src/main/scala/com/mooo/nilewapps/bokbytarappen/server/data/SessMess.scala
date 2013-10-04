@@ -15,6 +15,12 @@
  */
 package com.mooo.nilewapps.bokbytarappen.server.data
 
+import com.mooo.nilewapps.bokbytarappen.server.data.TokenJsonProtocol._
+
 case class SessMess[T](
   sess: Option[Token],
   mess: T)
+
+object SessMessJsonProtocol {
+  implicit val SessMessStringFormat = jsonFormat2(SessMess[String])
+}
