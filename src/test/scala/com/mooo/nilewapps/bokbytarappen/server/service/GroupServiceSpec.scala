@@ -24,12 +24,11 @@ import spray.routing.AuthenticationFailedRejection._
 import spray.testkit.Specs2RouteTest
 
 class GroupServiceSpec
-    extends Specification
-    with Specs2RouteTest
-    with GroupService {
+  extends Specification
+  with Specs2RouteTest
+  with GroupService {
 
   def actorRefFactory = system
-
 
   "GroupService" should {
     "reject unauthenticahed users" in e1
@@ -55,4 +54,3 @@ class GroupServiceSpec
     }
   }
 }
-

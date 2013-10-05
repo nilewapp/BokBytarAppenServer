@@ -41,22 +41,19 @@ import com.mooo.nilewapps.bokbytarappen.server.validation.Validators._
  * Actor that runs the service.
  */
 class ServiceActor extends Actor with Service {
-
   def actorRefFactory = context
-
   def receive = runRoute(routes)
-
 }
 
 /**
  * Provides all functionality of the server.
  */
 trait Service
-    extends HttpService
-    with PasswordService
-    with EmailService
-    with GroupService
-    with SessionService {
+  extends HttpService
+  with PasswordService
+  with EmailService
+  with GroupService
+  with SessionService {
 
   val routes = {
     get {
