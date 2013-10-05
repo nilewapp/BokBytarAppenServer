@@ -45,7 +45,7 @@ trait GroupService {
         'description,
         'privacy.as[GroupPrivacy],
         'parent.as[Int] ?) { (name, description, privacy, parent) =>
-        authorize(user.isMemberOf(parent)) {
+        validate(user.isMemberOf(parent), NotMemberOfParentGroup) {
           complete {
             query(insertGroup(name, user.id, description, privacy, parent))
             SessMess(Some(session), "Created group %s".format(name))
