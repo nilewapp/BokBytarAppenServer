@@ -21,17 +21,24 @@ import spray.json._
 
 import com.mooo.nilewapps.bokbytarappen.server.ServiceErrorCodes._
 
-sealed case class ServiceError(val code: Int, val reason: String)
+sealed case class ServiceError(code: Int, reason: String)
+
+object ServiceErrorJsonProtocol extends DefaultJsonProtocol {
+  implicit val serviceErrorFormat = jsonFormat2(ServiceError)
+}
 
 /**
  * Defines service error codes.
  */
 object ServiceErrors {
 
+  import com.mooo.nilewapps.bokbytarappen.server.ServiceErrorJsonProtocol._
+
+  implicit def String2ServiceError(s: String) =
+    s.asJson.convertTo[ServiceError]
+
   implicit def ServiceError2String(e: ServiceError) =
-    JsObject(
-      ("code", JsNumber(e.code)),
-      ("reason", JsString(e.reason))).toString
+    e.toJson.toString
 
   val BadPassword =
     ServiceError(
