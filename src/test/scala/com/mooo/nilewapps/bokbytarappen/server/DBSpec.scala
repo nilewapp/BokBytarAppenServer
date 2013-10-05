@@ -19,6 +19,7 @@ import scala.slick.driver.H2Driver.simple._
 import scala.slick.driver.H2Driver.simple.Database.threadLocalSession
 
 import com.typesafe.config._
+import org.h2.jdbc.JdbcSQLException
 import org.specs2.mutable.{BeforeAfter, Specification}
 
 import com.mooo.nilewapps.bokbytarappen.server.data._
@@ -32,7 +33,7 @@ class DBSpec extends Specification {
     }
   }
   "DB" should {
-    "be able to insert groups with no parents" in new Context {
+    "be able to insert groups with no parents" in new GroupContext {
       query {
         val groups = Query(Groups).filter(_.id === groupId).list
 
@@ -54,7 +55,12 @@ class DBSpec extends Specification {
         h.parent must_== None
       }
     }
-    "be able to insert groups with a parent" in new ChildContext {
+    "reject insert of group with non existing parent" in new ProfileContext {
+      val parent = Math.abs((new scala.util.Random).nextInt)
+      query(insertGroup("Name", profileId, "Description", Public, Some(parent))) must
+        throwA[JdbcSQLException]
+    }
+    "be able to insert groups with a parent" in new ChildGroupContext {
       query {
         val groups = Query(Groups).filter(_.id === childId).list
 
@@ -78,23 +84,35 @@ class DBSpec extends Specification {
     }
   }
 
-  trait Context extends BeforeAfter {
+  trait ProfileContext extends BeforeAfter {
 
     var profileId: Int = -1
-    var groupId: Int = -1
 
     def before = query {
       profileId = insertProfile("", "", None)
-      groupId = insertGroup("Name", profileId, "Description", Public, None)
     }
 
     def after = query {
-      Query(Groups).filter(_.id === groupId).delete
       Query(Profiles).filter(_.id === profileId).delete
     }
   }
 
-  trait ChildContext extends Context {
+  trait GroupContext extends ProfileContext {
+
+    var groupId: Int = -1
+
+    override def before = query {
+      super.before
+      groupId = insertGroup("Name", profileId, "Description", Public, None)
+    }
+
+    override def after = query {
+      Query(Groups).filter(_.id === groupId).delete
+      super.after
+    }
+  }
+
+  trait ChildGroupContext extends GroupContext {
 
     var childId: Int = -1
 
