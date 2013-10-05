@@ -47,7 +47,11 @@ trait GroupService {
         'parent.as[Int] ?) { (name, description, privacy, parent) =>
         validate(user.isMemberOf(parent), NotMemberOfParentGroup) {
           complete {
-            query(insertGroup(name, user.id, description, privacy, parent))
+            query {
+              val groupId =
+                insertGroup(name, user.id, description, privacy, parent)
+              Members.insert((groupId, user.id))
+            }
             SessMess(Some(session), "Created group %s".format(name))
           }
         }
