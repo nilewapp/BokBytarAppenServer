@@ -19,7 +19,7 @@ import scala.concurrent._
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 
-import org.specs2.mutable.{NameSpace, Specification, BeforeAfter}
+import org.specs2.mutable.{Specification, BeforeAfter}
 import org.specs2.time.NoTimeConversions
 import slick.driver.H2Driver.simple._
 import slick.driver.H2Driver.simple.Database.threadLocalSession
@@ -83,7 +83,7 @@ class PasswordAuthenticatorSpec
             Query(Sessions).filter(q =>
               q.id === id && q.seriesHash === seriesHash).list match {
               case result: List[S] =>
-                result.length must_== 1
+                result must be size(1)
                 val h = result.head
                 h.id must_== id
                 h.seriesHash must_== seriesHash
