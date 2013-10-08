@@ -299,9 +299,19 @@ object DB {
 
   /**
    * Make two Profiles "friends" by making them follow each other.
+   * Returns true on success.
    */
-  def addFriends(id1: Int, id2: Int) {
-    Followers.insert((id1, id2))
-    Followers.insert((id2, id1))
+  def addFriends(id1: Int, id2: Int): Boolean = {
+    Followers.insert((id1, id2)) + Followers.insert((id2, id1)) == 2
+  }
+
+  /**
+   * Unfriend two Profiles by having them unfollow each other.
+   * Returns true on success.
+   */
+  def removeFriends(id1: Int, id2: Int): Boolean = {
+    Query(Followers).filter(q =>
+      (q.id === id1 && q.follower === id2) ||
+      (q.id === id2 && q.follower === id1)).delete == 2
   }
 }
