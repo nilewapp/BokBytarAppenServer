@@ -35,7 +35,8 @@ object DBManager {
     Groups.ddl ++
     Members.ddl ++
     PasswordResetTokens.ddl ++
-    EmailConfirmationTokens.ddl
+    EmailConfirmationTokens.ddl ++
+    Followers.ddl
 
   def dropAll = query {
     all.drop

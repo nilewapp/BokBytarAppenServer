@@ -191,6 +191,20 @@ object DB {
       foreignKey("EMAIL_CONFIRMATION_TOKENS_PROFILE_FK", id, Profiles)(_.id)
   }
 
+  object Followers extends Table[(Int, Int)]("FOLLOWERS") {
+
+    def id = column[Int]("ID")
+    def follower = column[Int]("FOLLOWER")
+
+    def * = id ~ follower
+
+    def followersPK = primaryKey("FOLLOWERS_PK", *)
+
+    def profileFK = foreignKey("FOLLOWERS_PROFILE_FK", id, Profiles)(_.id)
+
+    def followerFK = foreignKey("FOLLOWERS_FOLLOWER_FK", id, Profiles)(_.id)
+  }
+
   /**
    * Performs an arbitrary method in a new database session.
    */
@@ -282,4 +296,12 @@ object DB {
    */
   def getProfile(email: String): Option[data.Profile] =
     Query(Profiles).filter(_.email === email).take(1).list.headOption
+
+  /**
+   * Make two Profiles "friends" by making them follow each other.
+   */
+  def addFriends(id1: Int, id2: Int) {
+    Followers.insert((id1, id2))
+    Followers.insert((id2, id1))
+  }
 }
