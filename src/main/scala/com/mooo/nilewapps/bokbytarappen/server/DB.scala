@@ -42,110 +42,151 @@ object DB {
    * Tables
    */
   object Countries extends Table[(Int, String)]("COUNTRIES") {
+
     def numericCode = column[Int]("NUMERIC_CODE", O.PrimaryKey)
     def alpha2Code = column[String]("ALPHA2_CODE")
+
     def * = numericCode ~ alpha2Code
   }
 
   object Cities extends Table[(String, Int)]("CITIES") {
+
     def name = column[String]("NAME", O.PrimaryKey)
     def country = column[Int]("COUNTRY")
+
     def * = name ~ country
+
     def countryFK = foreignKey("COUTRY_FK", country, Countries)(_.numericCode)
   }
 
   object Universities extends Table[(String, String)]("UNIVERSITIES") {
+
     def name = column[String]("NAME", O.PrimaryKey)
     def city = column[String]("CITY")
+
     def * = name ~ city
+
     def cityFK = foreignKey("CITY_FK", city, Cities)(_.name)
   }
 
   object Profiles extends Table[data.Profile]("PROFILES") {
+
     def id = column[Int]("ID", O.AutoInc, O.PrimaryKey)
     def email = column[Option[String]]("EMAIL")
     def passwordHash = column[String]("PASSWORD_HASH")
     def name = column[String]("NAME")
     def phoneNumber = column[Option[String]]("PHONE_NUMBER")
+
     def * = id ~ email ~ passwordHash ~ name ~ phoneNumber <>
       (data.Profile, data.Profile.unapply _)
+
     def emailIndex = index("PROFILES_EMAIL_INDEX", email, unique = true)
   }
 
   object WantedBooks extends Table[(Int, Int)]("WANTED_BOOKS") {
+
     def profileId = column[Int]("PROFILE_ID")
     def isbn13 = column[Int]("ISBN")
+
     def * = profileId ~ isbn13
+
     def wantedBooksPK = primaryKey("WANTED_BOOKS_PK", *)
+
     def profileFK =
       foreignKey("WANTED_PROFILE_FK", profileId, Profiles)(_.id)
   }
 
   object OwnedBooks extends Table[(Int, Int)]("OWNED_BOOKS") {
+
     def profileId = column[Int]("PROFILE_ID")
     def isbn13 = column[Int]("ISBN")
+
     def * = profileId ~ isbn13
+
     def ownedBooksPK = primaryKey("OWNED_BOOKS_PK", *)
+
     def profileFK = foreignKey("OWNED_PROFILE_FK", profileId, Profiles)(_.id)
   }
 
   object Sessions extends Table[data.Session]("SESSION") {
+
     def id = column[Int]("PROFILE")
     def seriesHash = column[String]("SERIES")
     def tokenHash = column[String]("TOKEN")
     def expirationTime = column[Long]("EXPIRATION_TIME")
+
     def * = id ~ seriesHash ~ tokenHash ~ expirationTime <>
       (data.Session, data.Session.unapply _)
+
     def sessionPK = primaryKey("SESSION_PK", id ~ seriesHash)
+
     def profileFK = foreignKey("SESSION_PROFILE_FK", id, Profiles)(_.id)
   }
 
   object Groups extends Table[data.Group]("GROUPS") {
+
     def id = column[Int]("ID", O.AutoInc, O.PrimaryKey)
     def name = column[String]("NAME")
     def owner = column[Int]("OWNER")
     def description = column[Clob]("DESCRIPTION")
     def privacy = column[data.GroupPrivacy]("PRIVACY")
     def parent = column[Option[Int]]("PARENT")
+
     def * = id ~ name ~ owner ~ description ~ privacy ~ parent <>
       (data.Group, data.Group.unapply _)
+
     def forInsert = name ~ owner ~ description ~ privacy ~ parent
+
     def ownerFK = foreignKey("GROUPS_OWNER_FK", owner, Profiles)(_.id)
+
     def parentFK = foreignKey("GROUPS_PARENT_FK", parent, Groups)(_.id)
   }
 
   object Members extends Table[(Int, Int)]("MEMBERS") {
+
     def group = column[Int]("GROUP")
     def profile = column[Int]("PROFILE")
+
     def * = group ~ profile
+
     def membersPK = primaryKey("MEMBERS_PK", *)
+
     def groupFK = foreignKey("MEMBERS_GROUP_FK", group, Groups)(_.id)
+
     def profileFK = foreignKey("MEMBERS_PROFILE_FK", profile, Profiles)(_.id)
   }
 
   object PasswordResetTokens
-      extends Table[data.SimpleToken]("PASSWORD_RESET_TOKENS") {
+    extends Table[data.SimpleToken]("PASSWORD_RESET_TOKENS") {
+
     def id = column[Int]("ID", O.PrimaryKey)
     def token = column[String]("TOKEN")
     def expirationTime = column[Long]("EXPIRATION_TIME")
+
     def * = id ~ token ~ expirationTime <>
       (data.SimpleToken, data.SimpleToken.unapply _)
+
     def tokenIndex =
       index("PASSWORD_RESET_TOKENS_TOKEN_INDEX", token, unique = true)
+
     def profileFK =
       foreignKey("PASSWORD_RESET_TOKENS_PROFILE_FK", id, Profiles)(_.id)
   }
 
   object EmailConfirmationTokens
-      extends Table[data.EmailConfirmationToken]("EMAIL_CONFIRMATION_TOKENS") {
+    extends Table[data.EmailConfirmationToken]("EMAIL_CONFIRMATION_TOKENS") {
+
     def id = column[Int]("ID", O.PrimaryKey)
     def token = column[String]("TOKEN")
     def email = column[String]("EMAIL")
     def expirationTime = column[Long]("EXPIRATION_TIME")
+
     def * = id ~ token ~ email ~ expirationTime <>
       (data.EmailConfirmationToken, data.EmailConfirmationToken.unapply _)
+
     def tokenIndex =
       index("EMAIL_CONFIRMATION_TOKENS_TOKEN_INDEX", token, unique = true)
+
     def profileFK =
       foreignKey("EMAIL_CONFIRMATION_TOKENS_PROFILE_FK", id, Profiles)(_.id)
   }
