@@ -38,31 +38,30 @@ case class Profile(
   /**
    * Deletes all session data and updates the email address of the user.
    */
-  def updateEmail(newEmail: Option[String]): Int = {
+  def updateEmail(newEmail: Option[String]): Option[Profile] = {
     deleteSessionData()
     Query(EmailConfirmationTokens).filter(_.id === id).delete
-    Query(Profiles).filter(_.id === id).update(
-      Profile(
-        id,
-        newEmail,
-        passwordHash,
-        name,
-        phoneNumber))
+    val p = Profile(id, newEmail, passwordHash, name, phoneNumber)
+    Query(Profiles).filter(_.id === id).update(p) match {
+      case 1 => Some(p)
+      case _ => None
+    }
   }
 
   /**
    * Delete all session data of a specific user and update its password.
    */
-  def updatePassword(password: String): Int = {
+  def updatePassword(password: String): Option[Profile] = {
     deleteSessionData()
     Query(PasswordResetTokens).filter(_.id === id).delete
-    Query(Profiles).filter(_.id === id).update(
-      Profile(
-        id,
-        email,
-        BCrypt.hashpw(password, BCrypt.gensalt()),
-        name,
-        phoneNumber))
+
+    val p = Profile(
+      id, email, BCrypt.hashpw(password, BCrypt.gensalt()), name, phoneNumber)
+
+    Query(Profiles).filter(_.id === id).update(p) match {
+      case 1 => Some(p)
+      case _ => None
+    }
   }
 
   /**
