@@ -205,6 +205,30 @@ object DB {
     def followerFK = foreignKey("FOLLOWERS_FOLLOWER_FK", id, Profiles)(_.id)
   }
 
+  object GroupMessages extends Table[data.Message]("GROUP_MESSAGES") {
+
+    def id = column[Int]("ID", O.PrimaryKey, O.AutoInc)
+    def author = column[Int]("AUTHOR")
+    def recipient = column[Int]("RECIPIENT")
+    def title = column[Option[String]]("TITLE")
+    def content = column[Clob]("CONTENT")
+    def parent = column[Int]("PARENT")
+
+    def * = id ~ author ~ recipient ~ title ~ content ~ parent <>
+      (data.Message, data.Message.unapply _)
+
+    def forInsert = author ~ recipient ~ title ~ content ~ parent
+
+    def authorFK =
+      foreignKey("GROUP_MESSAGES_AUTHOR_FK", author, Profiles)(_.id)
+
+    def recipientFK =
+      foreignKey("GROUP_MESSAGES_RECIPIENT_FK", recipient, Groups)(_.id)
+
+    def parentFK =
+      foreignKey("GROUP_MESSAGES_PARENT_FK", parent, GroupMessages)(_.id)
+  }
+
   /**
    * Performs an arbitrary method in a new database session.
    */
