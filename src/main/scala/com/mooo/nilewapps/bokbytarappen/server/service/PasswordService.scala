@@ -63,7 +63,7 @@ trait PasswordService {
       formField('password) { password =>
         validatePassword(password) {
           complete {
-            query(updatePassword(user, password))
+            query(user.updatePassword(password))
             implicit val SessMessStringFormat = jsonFormat2(SessMess[String])
             SessMess(None, "Password successfully changed!")
           }

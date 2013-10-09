@@ -19,6 +19,7 @@ import slick.driver.H2Driver.simple._
 import slick.driver.H2Driver.simple.Database.threadLocalSession
 
 import com.mooo.nilewapps.bokbytarappen.server.DB._
+import com.mooo.nilewapps.bokbytarappen.server.util.BCrypt
 
 case class Profile(
   id: Int,
@@ -27,6 +28,46 @@ case class Profile(
   name: String,
   phoneNumber: Option[String]) {
 
+  /**
+   * Delete all session data of the user.
+   */
+  def deleteSessionData() {
+    Query(Sessions).filter(_.id === id).delete
+  }
+
+  /**
+   * Deletes all session data and updates the email address of the user.
+   */
+  def updateEmail(newEmail: Option[String]): Int = {
+    deleteSessionData()
+    Query(EmailConfirmationTokens).filter(_.id === id).delete
+    Query(Profiles).filter(_.id === id).update(
+      Profile(
+        id,
+        newEmail,
+        passwordHash,
+        name,
+        phoneNumber))
+  }
+
+  /**
+   * Delete all session data of a specific user and update its password.
+   */
+  def updatePassword(password: String): Int = {
+    deleteSessionData()
+    Query(PasswordResetTokens).filter(_.id === id).delete
+    Query(Profiles).filter(_.id === id).update(
+      Profile(
+        id,
+        email,
+        BCrypt.hashpw(password, BCrypt.gensalt()),
+        name,
+        phoneNumber))
+  }
+
+  /**
+   * Returns true if the user is a member of the given group.
+   */
   def isMemberOf(groupId: Option[Int]): Boolean = query {
     groupId match {
       case Some(i) =>
@@ -36,6 +77,9 @@ case class Profile(
     }
   }
 
+  /**
+   * Returns true if the member of any child group of a given group.
+   */
   def isMemberOfChild(parentId: Option[Int]): Boolean = query {
     parentId match {
       case Some(i) =>

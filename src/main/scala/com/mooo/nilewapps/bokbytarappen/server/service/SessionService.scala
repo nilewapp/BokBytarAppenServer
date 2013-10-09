@@ -48,7 +48,7 @@ trait SessionService {
   def deleteSessionData = {
     (authWithTokenNoSession | authWithPassNoSession) { case user =>
       complete {
-        DB.query(DB.deleteSessionData(user.id))
+        DB.query(user.deleteSessionData())
         SessMess(None, "Your session data has been deleted!")
       }
     }

@@ -31,7 +31,7 @@ object EmailChangeManager {
   def confirmEmail(token: EmailConfirmationToken): Option[String] = query {
     for {
       profile <- getProfile(token.id)
-      if updateEmail(profile, Some(token.email)) == 1
+      if profile.updateEmail(Some(token.email)) == 1
     } yield token.email
   }
 

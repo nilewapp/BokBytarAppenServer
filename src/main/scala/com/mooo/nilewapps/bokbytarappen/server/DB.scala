@@ -263,13 +263,6 @@ object DB {
   }
 
   /**
-   * Delete all session data for a specific user.
-   */
-  def deleteSessionData(id: Int) {
-    Query(Sessions).filter(_.id === id).delete
-  }
-
-  /**
    * Deletes expired Sessions etc.
    */
   def deleteOldData() {
@@ -277,36 +270,6 @@ object DB {
     Query(Sessions).filter(_.expirationTime <= t).delete
     Query(PasswordResetTokens).filter(_.expirationTime <= t).delete
     Query(EmailConfirmationTokens).filter(_.expirationTime <= t).delete
-  }
-
-  /**
-   * Deletes all session data and updates the email address of a given user.
-   */
-  def updateEmail(user: data.Profile, email: Option[String]): Int = {
-    deleteSessionData(user.id)
-    Query(EmailConfirmationTokens).filter(_.id === user.id).delete
-    Query(Profiles).filter(_.id === user.id).update(
-      data.Profile(
-        user.id,
-        email,
-        user.passwordHash,
-        user.name,
-        user.phoneNumber))
-  }
-
-  /**
-   * Delete all session data of a specific user and update its password.
-   */
-  def updatePassword(user: data.Profile, password: String): Int = {
-    deleteSessionData(user.id)
-    Query(PasswordResetTokens).filter(_.id === user.id).delete
-    Query(Profiles).filter(_.id === user.id).update(
-      data.Profile(
-        user.id,
-        user.email,
-        BCrypt.hashpw(password, BCrypt.gensalt()),
-        user.name,
-        user.phoneNumber))
   }
 
   /**
