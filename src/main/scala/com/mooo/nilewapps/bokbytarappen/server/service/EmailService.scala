@@ -20,6 +20,7 @@ import spray.routing.Directives._
 
 import com.mooo.nilewapps.bokbytarappen.server.authentication.Authenticators._
 import com.mooo.nilewapps.bokbytarappen.server.data.SessMess
+import com.mooo.nilewapps.bokbytarappen.server.data.SessMessJsonProtocol._
 import com.mooo.nilewapps.bokbytarappen.server.data.TokenJsonProtocol._
 import com.mooo.nilewapps.bokbytarappen.server.EmailChangeManager
 import com.mooo.nilewapps.bokbytarappen.server.ServiceErrors._
@@ -69,7 +70,6 @@ trait EmailService {
         validateEmail(email) {
           complete {
             EmailChangeManager.requestEmailChange(user.id, email)
-            implicit val SessMessStringFormat = jsonFormat2(SessMess[String])
             SessMess(None,
               "A confirmation email has been sent to %s!".format(email))
           }
