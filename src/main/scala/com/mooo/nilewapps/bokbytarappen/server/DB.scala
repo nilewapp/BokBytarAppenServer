@@ -212,12 +212,13 @@ object DB {
     def recipient = column[Int]("RECIPIENT")
     def title = column[Option[String]]("TITLE")
     def content = column[Clob]("CONTENT")
-    def parent = column[Int]("PARENT")
+    def parent = column[Option[Int]]("PARENT")
+    def time = column[Long]("TIME")
 
-    def * = id ~ author ~ recipient ~ title ~ content ~ parent <>
+    def * = id ~ author ~ recipient ~ title ~ content ~ parent ~ time <>
       (data.Message, data.Message.unapply _)
 
-    def forInsert = author ~ recipient ~ title ~ content ~ parent
+    def forInsert = author ~ recipient ~ title ~ content ~ parent ~ time
 
     def authorFK =
       foreignKey("GROUP_MESSAGES_AUTHOR_FK", author, Profiles)(_.id)
@@ -260,6 +261,18 @@ object DB {
     clob.setString(1, description)
     Groups.forInsert returning Groups.id insert(
       (name, owner, clob, privacy, parent))
+  }
+
+  def insertGroupMessage(
+      author: Int,
+      recipient: Int,
+      title: Option[String],
+      content: String,
+      parent: Option[Int]): Int = {
+    val clob = threadLocalSession.conn.createClob()
+    clob.setString(1, content)
+    GroupMessages.forInsert returning GroupMessages.id insert(
+      (author, recipient, title, clob, parent, System.currentTimeMillis))
   }
 
   /**

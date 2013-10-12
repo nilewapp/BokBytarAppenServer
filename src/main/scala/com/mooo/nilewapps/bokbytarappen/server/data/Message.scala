@@ -23,4 +23,5 @@ case class Message(
   recipient: Int,
   title: Option[String],
   content: Clob,
-  parent: Int)
+  parent: Option[Int],
+  time: Long)
