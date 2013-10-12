@@ -65,15 +65,11 @@ trait GroupService {
   def joinGroup = {
     (authWithToken | authWithPass) { case (user, session) =>
       formField('group.as[Int]) { groupId =>
-        val group = query {
-          Query(Groups).filter(_.id === groupId).take(1).list.headOption
-        }
-        (validate(group != None, NonExistingGroup) &
-         validate(!user.isMemberOf(Some(groupId)), AlreadyMemberOfGroup) &
-         validate(user.isMemberOf(group.get.parent), NotMemberOfParentGroup)) {
+        (validate(!user.isMemberOf(Some(groupId)), AlreadyMemberOfGroup) &
+         validate(user.isMemberOfParent(Some(groupId)), NotMemberOfParentGroup)) {
           complete {
             query(Members.insert((groupId, user.id)))
-            SessMess(Some(session), "Joined group %s".format(group.get.name))
+            SessMess(Some(session), "Joined group")
           }
         }
       }
@@ -86,18 +82,14 @@ trait GroupService {
   def leaveGroup = {
     (authWithToken | authWithPass) { case (user, session) =>
       formField('group.as[Int]) { groupId =>
-        val group = query {
-          Query(Groups).filter(_.id === groupId).take(1).list.headOption
-        }
-        (validate(group != None, NonExistingGroup) &
-         validate(user.isMemberOf(Some(groupId)), NotMemberOfGroup) &
-         validate(user.isMemberOfChild(Some(groupId)), MemberOfChildGroup)) {
+        (validate(user.isMemberOf(Some(groupId)), NotMemberOfGroup) &
+         validate(!user.isMemberOfChild(Some(groupId)), MemberOfChildGroup)) {
           complete {
             query {
               Query(Members).filter(q =>
                 q.group === groupId && q.profile === user.id).delete
             }
-            SessMess(Some(session), "Left group %s".format(group.get.name))
+            SessMess(Some(session), "Left group")
           }
         }
       }
