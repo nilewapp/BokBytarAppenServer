@@ -79,4 +79,19 @@ object ServiceErrors {
     ServiceError(
       MEMBER_OF_CHILD_GROUP,
       "You are still a member of a child group.")
+
+  val TitleTooShort =
+    ServiceError(
+      TITLE_TOO_SHORT,
+      "The title of your post is too short.")
+
+  val ContentTooShort =
+    ServiceError(
+      CONTENT_TOO_SHORT,
+      "The content of your post is too short.")
+
+  val ResponseToNothing =
+    ServiceError(
+      RESPONSE_TO_NOTHING,
+      "You tried to respond to a message that doesn't exist.")
 }

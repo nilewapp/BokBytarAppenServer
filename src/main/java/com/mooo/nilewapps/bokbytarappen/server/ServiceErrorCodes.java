@@ -65,4 +65,22 @@ class ServiceErrorCodes {
    * still a member of a child Group.
    */
   public static final int MEMBER_OF_CHILD_GROUP = 8;
+
+  /**
+   * Returned when the user tries to submit a post with a title that
+   * is too short.
+   */
+  public static final int TITLE_TOO_SHORT = 9;
+
+  /**
+   * Returned when the user tries to submit a post with content text
+   * that is too short.
+   */
+  public static final int CONTENT_TOO_SHORT = 10;
+
+  /**
+   * Returned when the user tries to respond to a message that doesn't
+   * exist.
+   */
+  public static final int RESPONSE_TO_NOTHING = 11;
 }
