@@ -76,6 +76,20 @@ case class Profile(
     }
   }
 
+  def isMemberOfParent(childId: Option[Int]): Boolean = query {
+    childId match {
+      case Some(i) =>
+        (for {
+          g <- Groups
+          m <- Members
+          if g.id === childId &&
+             m.profile === id &&
+             m.group === g.parent
+        } yield g.id).list.length == 1
+      case None => false
+    }
+  }
+
   /**
    * Returns true if the member of any child group of a given group.
    */
@@ -88,7 +102,7 @@ case class Profile(
           if m.profile === id &&
              m.group === g.id &&
              g.parent === parentId
-        } yield g.name).list.isEmpty
+        } yield g.id).list.isEmpty
       case None =>
         (for {
           m <- Members
